@@ -72,6 +72,8 @@ public final class DriveCommands {
 
           // Square values
           linearMagnitude = linearMagnitude * linearMagnitude;
+          // omega = Math.pow(omega, 3);
+          omega = Math.copySign(omega * omega, omega);
 
           // Calcaulate new linear velocity
           Translation2d linearVelocity =
