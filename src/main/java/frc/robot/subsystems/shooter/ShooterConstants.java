@@ -54,8 +54,8 @@ public class ShooterConstants {
         KV.initDefault(12.0 / 103.4508);
         KA.initDefault(0.0014107);
         SPEED_TOLERANCE_RADIANS_PER_SECOND = 15.0;
-        TOP_AMP_SPEED.initDefault(80.0);
-        BOTTOM_AMP_SPEED.initDefault(20.0);
+        TOP_AMP_SPEED.initDefault(40.0);
+        BOTTOM_AMP_SPEED.initDefault(40.0);
         SPEAKER_SPEED.initDefault(600.0);
         FEED_SPEED.initDefault(300);
         break;

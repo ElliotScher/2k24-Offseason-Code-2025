@@ -19,6 +19,8 @@ public class Arm extends SubsystemBase {
   private final ArmIO io;
   private Rotation2d positionSetpoint;
   private boolean isClosedLoop;
+  private boolean isAmping;
+  private boolean isSlowMode;
   private final SysIdRoutine characterizationRoutine;
 
   public Arm(ArmIO io) {
@@ -49,7 +51,21 @@ public class Arm extends SubsystemBase {
     Logger.processInputs("Arm", inputs);
 
     if (isClosedLoop) {
-      io.setArmPosition(inputs.armPosition, positionSetpoint);
+      if (isAmping) {
+        if (!isSlowMode) {
+          isSlowMode = true;
+          io.setProfile(10, 10);
+        }
+        io.setArmPosition(inputs.armPosition, positionSetpoint);
+      }
+      if (!isAmping) {
+        if (isSlowMode) {
+          io.setProfile(
+              ArmConstants.ARM_MAX_VELOCITY.get(), ArmConstants.ARM_MAX_ACCELERATION.get());
+          isSlowMode = false;
+        }
+        io.setArmPosition(inputs.armPosition, positionSetpoint);
+      }
     }
 
     LoggedTunableNumber.ifChanged(
@@ -86,6 +102,7 @@ public class Arm extends SubsystemBase {
   public Command stowAngle() {
     return Commands.runOnce(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint = ArmConstants.ARM_STOW_CONSTANT;
         });
@@ -101,6 +118,7 @@ public class Arm extends SubsystemBase {
   public Command intakeAngle() {
     return Commands.runOnce(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint = ArmConstants.ARM_INTAKE_CONSTANT;
         });
@@ -116,14 +134,25 @@ public class Arm extends SubsystemBase {
   public Command ampAngle() {
     return Commands.runOnce(
         () -> {
+          isAmping = true;
           isClosedLoop = true;
           positionSetpoint = Rotation2d.fromRadians(ArmConstants.ARM_AMP_CONSTANT.get());
+        });
+  }
+
+  public Command preAmpAngle() {
+    return Commands.runOnce(
+        () -> {
+          isAmping = false;
+          isClosedLoop = true;
+          positionSetpoint = Rotation2d.fromRadians(ArmConstants.ARM_PREAMP_CONSTANT.get());
         });
   }
 
   public Command ejectCommand() {
     return Commands.runOnce(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint = ArmConstants.ARM_EJECT_ANGLE;
         });
@@ -139,6 +168,7 @@ public class Arm extends SubsystemBase {
   public Command shootAngle() {
     return Commands.run(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint =
               Rotation2d.fromRadians(RobotState.getControlData().speakerArmAngle().getRadians());
@@ -155,6 +185,7 @@ public class Arm extends SubsystemBase {
   public Command feedAngle() {
     return Commands.runOnce(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint = Rotation2d.fromRadians(ArmConstants.FEED_ANGLE.get());
         });
@@ -163,6 +194,7 @@ public class Arm extends SubsystemBase {
   public Command subwooferAngle() {
     return Commands.runOnce(
         () -> {
+          isAmping = false;
           isClosedLoop = true;
           positionSetpoint =
               shootForward()
@@ -194,5 +226,9 @@ public class Arm extends SubsystemBase {
 
   public Command runVoltage(double volts) {
     return Commands.run(() -> io.setArmVoltage(volts));
+  }
+
+  public Rotation2d getPosition() {
+    return inputs.armAbsolutePosition;
   }
 }

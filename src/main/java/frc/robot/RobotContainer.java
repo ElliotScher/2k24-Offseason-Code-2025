@@ -131,7 +131,9 @@ public class RobotContainer {
     driver
         .axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.95)
         .whileTrue(CompositeCommands.shootAmp(intake, arm, shooter));
-    driver.axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.05).whileTrue(arm.ampAngle());
+    driver
+        .axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.05)
+        .whileTrue(arm.preAmpAngle());
     driver
         .povUp()
         .onTrue(

@@ -16,6 +16,7 @@ public class ArmConstants {
   public static final Rotation2d ARM_STOW_CONSTANT;
   public static final Rotation2d ARM_INTAKE_CONSTANT;
   public static final LoggedTunableNumber ARM_AMP_CONSTANT;
+  public static final LoggedTunableNumber ARM_PREAMP_CONSTANT;
   public static final Rotation2d ARM_ABSOLUTE_ENCODER_OFFSET;
   public static final int ARM_ENCODER_ID;
   public static final LoggedTunableNumber GOAL_TOLERANCE;
@@ -43,6 +44,7 @@ public class ArmConstants {
     ARM_MAX_VELOCITY = new LoggedTunableNumber("Arm/MAX_VELOCITY");
     ARM_MAX_ACCELERATION = new LoggedTunableNumber("Arm/MAX_ACCELERATION");
     ARM_AMP_CONSTANT = new LoggedTunableNumber("Arm/Amp Angle");
+    ARM_PREAMP_CONSTANT = new LoggedTunableNumber("Arm/Pre Amp Angle");
     ARM_SUBWOOFER_CONSTANT = new LoggedTunableNumber("Arm/Subwoofer Angle");
     GOAL_TOLERANCE = new LoggedTunableNumber("Arm/Goal Tolerance");
     FEED_ANGLE = new LoggedTunableNumber("Arm/Feed Angle");
@@ -66,10 +68,11 @@ public class ArmConstants {
         ARM_STOW_CONSTANT = Rotation2d.fromDegrees(20.0);
         ARM_INTAKE_CONSTANT = ARM_STOW_CONSTANT;
         ARM_AMP_CONSTANT.initDefault(Units.degreesToRadians(110.0));
+        ARM_PREAMP_CONSTANT.initDefault(Units.degreesToRadians(90.0));
         ARM_ABSOLUTE_ENCODER_OFFSET =
             Rotation2d.fromRadians(-0.6273981422452273).plus(Rotation2d.fromDegrees(18.746));
         ARM_ENCODER_ID = 24;
-        GOAL_TOLERANCE.initDefault(0.5);
+        GOAL_TOLERANCE.initDefault(1.0);
         // Get
         ARM_LENGTH_METERS = 0.381;
         ARM_MIN_ANGLE = Units.degreesToRadians(18.75);

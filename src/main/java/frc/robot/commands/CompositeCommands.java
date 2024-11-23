@@ -96,15 +96,19 @@ public class CompositeCommands {
 
   public static final Command shootAmp(Intake intake, Arm arm, Shooter shooter) {
     return Commands.sequence(
-        Commands.parallel(shooter.setAmpVelocity(), arm.ampAngle()),
+        Commands.parallel(shooter.setAmpVelocity(), arm.preAmpAngle()),
         Commands.waitUntil(() -> shooter.atSetPoint() && arm.atSetpoint()),
-        intake.shoot(),
+        Commands.waitSeconds(0.125),
+        Commands.parallel(intake.shoot(), arm.ampAngle()),
+        Commands.waitSeconds(0.5),
         Commands.either(
             Commands.sequence(
                 CompositeCommands.collect(intake, arm),
-                Commands.parallel(shooter.setAmpVelocity(), arm.ampAngle()),
+                Commands.parallel(shooter.setAmpVelocity(), arm.preAmpAngle()),
                 Commands.waitUntil(() -> shooter.atSetPoint() && arm.atSetpoint()),
-                intake.shoot(),
+                Commands.waitSeconds(0.125),
+                Commands.parallel(intake.shoot(), arm.ampAngle()),
+                Commands.waitSeconds(0.5),
                 arm.stowAngle()),
             arm.stowAngle(),
             () -> intake.hasNoteStaged()));
