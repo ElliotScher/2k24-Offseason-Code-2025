@@ -4,8 +4,9 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -35,16 +36,15 @@ public class ArmIOTalonFX implements ArmIO {
 
   private final StatusSignal<Angle> absolutePosition;
 
-  private final MotionMagicVoltage positionControl;
   private final VoltageOut voltageControl;
   private final NeutralOut neutralControl;
+  private final MotionMagicTorqueCurrentFOC positionControl;
+  private final TorqueCurrentFOC currentControl;
 
   private final TalonFXConfiguration motorConfig;
   private final CANcoderConfiguration cancoderConfig;
 
   private Rotation2d positionGoal;
-
-  private boolean hasResetPosition;
 
   public ArmIOTalonFX() {
     motor = new TalonFX(ArmConstants.ARM_CAN_ID);
@@ -54,7 +54,7 @@ public class ArmIOTalonFX implements ArmIO {
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    motorConfig.Feedback.SensorToMechanismRatio = ArmConstants.ARM_GEAR_RATIO;
+    motorConfig.Feedback.withFusedCANcoder(cancoder);
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotionMagic.MotionMagicCruiseVelocity =
         Units.radiansToRotations(ArmConstants.ARM_MAX_VELOCITY.get());
@@ -82,7 +82,8 @@ public class ArmIOTalonFX implements ArmIO {
 
     absolutePosition = cancoder.getAbsolutePosition();
 
-    positionControl = new MotionMagicVoltage(0.0);
+    positionControl = new MotionMagicTorqueCurrentFOC(0.0);
+    currentControl = new TorqueCurrentFOC(0.0);
     voltageControl = new VoltageOut(0.0);
     neutralControl = new NeutralOut();
 
@@ -101,8 +102,6 @@ public class ArmIOTalonFX implements ArmIO {
 
     motor.optimizeBusUtilization(50.0, 1.0);
     cancoder.optimizeBusUtilization(50.0, 1.0);
-
-    hasResetPosition = false;
   }
 
   @Override
@@ -144,35 +143,21 @@ public class ArmIOTalonFX implements ArmIO {
 
   @Override
   public void setArmVoltage(double volts) {
-    if (!hasResetPosition) {
-      hasResetPosition =
-          motor
-              .setPosition(
-                  (absolutePosition.getValueAsDouble()
-                          - ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET.getRotations())
-                      * -1.0)
-              .isOK();
-    }
-    motor.setControl(voltageControl.withOutput(volts).withEnableFOC(false));
+    motor.setControl(voltageControl.withOutput(volts).withEnableFOC(false).withUpdateFreqHz(1000));
+  }
+
+  @Override
+  public void setArmCurrent(double amps) {
+    motor.setControl(currentControl.withOutput(amps).withUpdateFreqHz(1000));
   }
 
   @Override
   public void setArmPosition(Rotation2d currentPosition, Rotation2d setpointPosition) {
-    if (!hasResetPosition) {
-      hasResetPosition =
-          motor
-              .setPosition(
-                  (absolutePosition.getValueAsDouble()
-                          - ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET.getRotations())
-                      * -1.0)
-              .isOK();
-    }
     positionGoal = setpointPosition;
     motor.setControl(
         positionControl
             .withPosition(setpointPosition.getRotations())
-            .withUpdateFreqHz(1000)
-            .withEnableFOC(false));
+            .withUpdateFreqHz(1000));
   }
 
   @Override
@@ -196,6 +181,11 @@ public class ArmIOTalonFX implements ArmIO {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = Units.radiansToRotations(maxVelocity);
     motorConfig.MotionMagic.MotionMagicAcceleration = Units.radiansToRotations(maxAcceleration);
     motor.getConfigurator().apply(motorConfig);
+  }
+
+  @Override
+  public void runArmCharacterization(double amps) {
+    motor.setControl(currentControl.withOutput(amps).withUpdateFreqHz(1000));
   }
 
   @Override

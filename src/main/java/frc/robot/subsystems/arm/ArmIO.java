@@ -23,6 +23,10 @@ public interface ArmIO {
 
   public default void setArmVoltage(double volts) {}
 
+  public default void setArmCurrent(double amps) {}
+
+  public default void setArmPosition(Rotation2d currentPosition, Rotation2d setpointPosition) {}
+
   public default void stop() {}
 
   public default void setPID(double kp, double ki, double kd) {}
@@ -31,7 +35,7 @@ public interface ArmIO {
 
   public default void setProfile(double max_velocity, double max_acceleration) {}
 
-  public default void setArmPosition(Rotation2d currentPosition, Rotation2d setpointPosition) {}
+  public default void runArmCharacterization(double amps) {}
 
   public default boolean atSetpoint() {
     return false;
