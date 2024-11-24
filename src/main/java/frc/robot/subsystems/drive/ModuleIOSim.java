@@ -33,10 +33,12 @@ public class ModuleIOSim implements ModuleIO {
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
+
   private PIDController driveController =
       new PIDController(DriveConstants.DRIVE_KP, 0, DriveConstants.DRIVE_KD);
   private PIDController turnController =
       new PIDController(DriveConstants.TURN_KP, 0, DriveConstants.TURN_KD);
+
   private double driveFFVolts = 0.0;
   private double driveAppliedVolts = 0.0;
   private double turnAppliedVolts = 0.0;
@@ -82,24 +84,27 @@ public class ModuleIOSim implements ModuleIO {
     turnSim.update(0.02);
 
     // Update drive inputs
-    inputs.driveConnected = true;
-    inputs.drivePositionRad = driveSim.getAngularPositionRad();
-    inputs.driveVelocityRadPerSec = driveSim.getAngularVelocityRadPerSec();
+    inputs.drivePosition = Rotation2d.fromRadians(driveSim.getAngularPositionRad());
+    inputs.driveVelocityRadiansPerSecond = driveSim.getAngularVelocityRadPerSec();
     inputs.driveAppliedVolts = driveAppliedVolts;
-    inputs.driveCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
+    inputs.driveSupplyCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
+    inputs.driveVelocityGoalRadiansPerSecond = driveController.getSetpoint();
+    inputs.driveVelocitySetpointRadiansPerSecond = driveController.getSetpoint();
+    inputs.driveVelocityErrorRadiansPerSecond = driveController.getError();
 
     // Update turn inputs
-    inputs.turnConnected = true;
-    inputs.turnEncoderConnected = true;
     inputs.turnAbsolutePosition = new Rotation2d(turnSim.getAngularPositionRad());
     inputs.turnPosition = new Rotation2d(turnSim.getAngularPositionRad());
-    inputs.turnVelocityRadPerSec = turnSim.getAngularVelocityRadPerSec();
+    inputs.turnVelocityRadiansPerSecond = turnSim.getAngularVelocityRadPerSec();
     inputs.turnAppliedVolts = turnAppliedVolts;
-    inputs.turnCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
+    inputs.turnSupplyCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
+    inputs.turnPositionGoal = Rotation2d.fromRadians(turnController.getSetpoint());
+    inputs.turnPositionSetpoint = Rotation2d.fromRadians(turnController.getSetpoint());
+    inputs.turnPositionError = Rotation2d.fromRadians(turnController.getSetpoint());
 
     // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't matter)
     inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
-    inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
+    inputs.odometryDrivePositions = new Rotation2d[] {inputs.drivePosition};
     inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
   }
 

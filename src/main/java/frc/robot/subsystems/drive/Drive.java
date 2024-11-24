@@ -26,9 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WhiplashTunerConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,27 +35,25 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
+  public static final Lock odometryLock;
+
+  private final GyroIO gyroIO;
+  private final GyroIOInputsAutoLogged gyroInputs;
+  private final Module[] modules;
   private final LinearFilter xFilter;
   private final LinearFilter yFilter;
   private double filteredX;
   private double filteredY;
-  static final Lock odometryLock = new ReentrantLock();
-  private final GyroIO gyroIO;
-  private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
-  private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-  private final SysIdRoutine sysId;
-  private final Alert gyroDisconnectedAlert =
-      new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
-  @Getter private Rotation2d rawGyroRotation = new Rotation2d();
-  private SwerveModulePosition[] lastModulePositions = // For delta tracking
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
+  private SwerveDriveKinematics kinematics;
+  @Getter private Rotation2d rawGyroRotation;
+  private SwerveModulePosition[] lastModulePositions;
+
+  private final Alert gyroDisconnectedAlert;
+
+  static {
+    odometryLock = new ReentrantLock();
+  }
 
   public Drive(
       GyroIO gyroIO,
@@ -66,29 +62,35 @@ public class Drive extends SubsystemBase {
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
     this.gyroIO = gyroIO;
-    modules[0] = new Module(flModuleIO, 0, WhiplashTunerConstants.FrontLeft);
-    modules[1] = new Module(frModuleIO, 1, WhiplashTunerConstants.FrontRight);
-    modules[2] = new Module(blModuleIO, 2, WhiplashTunerConstants.BackLeft);
-    modules[3] = new Module(brModuleIO, 3, WhiplashTunerConstants.BackRight);
+    this.gyroInputs = new GyroIOInputsAutoLogged();
+    modules =
+        new Module[] {
+          new Module(flModuleIO, 0, WhiplashTunerConstants.FrontLeft),
+          new Module(frModuleIO, 1, WhiplashTunerConstants.FrontRight),
+          new Module(blModuleIO, 2, WhiplashTunerConstants.BackLeft),
+          new Module(brModuleIO, 3, WhiplashTunerConstants.BackRight),
+        };
 
     // Start threads (no-op if no signals have been created)
     PhoenixOdometryThread.getInstance().start();
-
-    // Configure SysId
-    sysId =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
     xFilter = LinearFilter.movingAverage(10);
     yFilter = LinearFilter.movingAverage(10);
     filteredX = 0;
     filteredY = 0;
+
+    kinematics = new SwerveDriveKinematics(getModuleTranslations());
+    rawGyroRotation = new Rotation2d();
+    lastModulePositions =
+        new SwerveModulePosition[] {
+          new SwerveModulePosition(),
+          new SwerveModulePosition(),
+          new SwerveModulePosition(),
+          new SwerveModulePosition()
+        };
+
+    gyroDisconnectedAlert =
+        new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
   }
 
   public void periodic() {
@@ -202,16 +204,6 @@ public class Drive extends SubsystemBase {
     }
     kinematics.resetHeadings(headings);
     stop();
-  }
-
-  /** Returns a command to run a quasistatic test in the specified direction. */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return sysId.quasistatic(direction);
-  }
-
-  /** Returns a command to run a dynamic test in the specified direction. */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return sysId.dynamic(direction);
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

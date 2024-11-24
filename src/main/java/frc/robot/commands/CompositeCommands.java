@@ -44,7 +44,7 @@ public class CompositeCommands {
                     () ->
                         shooter.atSetPoint()
                             && arm.atSetpoint()
-                            && DriveCommands.atAimSetpoint()
+                            && DriveCommands.getAimController().atSetpoint()
                             && drive.getYawVelocity() <= Units.degreesToRadians(1)),
             Commands.waitSeconds(0.125),
             intake.shoot(),
@@ -56,7 +56,7 @@ public class CompositeCommands {
                             () ->
                                 shooter.atSetPoint()
                                     && arm.atSetpoint()
-                                    && DriveCommands.atAimSetpoint()),
+                                    && DriveCommands.getAimController().atSetpoint()),
                     Commands.waitSeconds(0.125),
                     intake.shoot(),
                     arm.stowAngle()),
@@ -72,7 +72,10 @@ public class CompositeCommands {
     return Commands.sequence(
         Commands.deadline(shooter.setSpeakerVelocity(), arm.shootAngle()),
         Commands.waitUntil(
-            () -> shooter.atSetPoint() && arm.atSetpoint() && DriveCommands.atAimSetpoint()),
+            () ->
+                shooter.atSetPoint()
+                    && arm.atSetpoint()
+                    && DriveCommands.getAimController().atSetpoint()),
         Commands.runOnce(() -> drive.stop()),
         Commands.waitSeconds(0.125),
         intake.shoot());
