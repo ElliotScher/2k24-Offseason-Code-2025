@@ -31,14 +31,16 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.RobotState;
+import frc.robot.commands.CompositeCommands.KSCharacterization;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 public final class DriveCommands {
-  private static PIDController aimController =
+  private static final PIDController aimController =
       new PIDController(
           DriveConstants.AUTO_THETA_KP,
           0,
@@ -163,7 +165,11 @@ public final class DriveCommands {
     return Commands.run(() -> drive.stopWithX());
   }
 
-  public static final Command runSysIdQuasistatic(Drive drive, Direction direction) {
+  public static final Command runCurrentCharacterization(Drive drive) {
+    return new KSCharacterization(drive, drive::runCharacterization, drive::getCharacterizationVelocity);
+  }
+
+    private static final Command runSysIdQuasistatic(Drive drive, Direction direction) {
     return new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,
@@ -175,7 +181,7 @@ public final class DriveCommands {
         .quasistatic(direction);
   }
 
-  public static final Command runSysIdDynamic(Drive drive, Direction direction) {
+  private static final Command runSysIdDynamic(Drive drive, Direction direction) {
     return new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,
@@ -185,6 +191,19 @@ public final class DriveCommands {
             new SysIdRoutine.Mechanism(
                 (volts) -> drive.runCharacterization(volts.in(Volts)), null, drive))
         .dynamic(direction);
+  }
+
+
+  public static final Command runVoltageCharacterization(Drive drive) {
+    return Commands.sequence(
+        runSysIdQuasistatic(drive, Direction.kForward),
+        Commands.waitSeconds(5.0),
+        runSysIdQuasistatic(drive, Direction.kReverse),
+        Commands.waitSeconds(5.0),
+        runSysIdDynamic(drive, Direction.kForward),
+        Commands.waitSeconds(5.0),
+        runSysIdDynamic(drive, Direction.kReverse)
+    );
   }
 
   public static final boolean atAimSetpoint() {

@@ -1,18 +1,24 @@
 package frc.robot.commands;
 
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.RobotState;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.LoggedTunableNumber;
 
 public class CompositeCommands {
   public static final Command resetHeading(Drive drive) {
@@ -128,5 +134,48 @@ public class CompositeCommands {
                 arm.stowAngle()),
             arm.stowAngle(),
             () -> intake.hasNoteStaged()));
+  }
+
+  public static final class KSCharacterization extends Command {
+    private static final LoggedTunableNumber currentRampFactor =
+        new LoggedTunableNumber("StaticCharacterization/CurrentRampPerSec", 1.0);
+    private static final LoggedTunableNumber minVelocity =
+        new LoggedTunableNumber("StaticCharacterization/MinStaticVelocity", 0.1);
+
+    private final DoubleConsumer inputConsumer;
+    private final DoubleSupplier velocitySupplier;
+    private final Timer timer = new Timer();
+    private double currentInput = 0.0;
+
+    public KSCharacterization(
+        Subsystem subsystem,
+        DoubleConsumer characterizationInputConsumer,
+        DoubleSupplier velocitySupplier) {
+      inputConsumer = characterizationInputConsumer;
+      this.velocitySupplier = velocitySupplier;
+      addRequirements(subsystem);
+    }
+
+    @Override
+    public void initialize() {
+      timer.restart();
+    }
+
+    @Override
+    public void execute() {
+      currentInput = timer.get() * currentRampFactor.get();
+      inputConsumer.accept(currentInput);
+    }
+
+    @Override
+    public boolean isFinished() {
+      return velocitySupplier.getAsDouble() >= minVelocity.get();
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+      System.out.println("Static Characterization output: " + currentInput + " amps");
+      inputConsumer.accept(0);
+    }
   }
 }

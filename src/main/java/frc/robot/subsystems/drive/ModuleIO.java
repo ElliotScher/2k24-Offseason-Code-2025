@@ -52,4 +52,7 @@ public interface ModuleIO {
 
   /** Run the turn motor to the specified rotation. */
   public default void setTurnPosition(Rotation2d rotation) {}
+
+  /** Run the turn motor to 0 and characterize ramp the drive output */
+  public default void runCharacterization(double output) {}
 }

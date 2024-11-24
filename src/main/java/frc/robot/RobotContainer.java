@@ -13,6 +13,8 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTablesJNI;
 import edu.wpi.first.wpilibj.XboxController;
@@ -53,6 +55,9 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
+
+  // Auto Chooser
+  private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Mode");
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -106,6 +111,11 @@ public class RobotContainer {
     if (leds == null) {
       leds = new Leds();
     }
+
+    // Configure auto chooser
+    autoChooser.addDefaultOption("None", Commands.none());
+    autoChooser.addOption("Drive Voltage Characterization", DriveCommands.runVoltageCharacterization(drive));
+    autoChooser.addOption("Drive Current Characterization", DriveCommands.runCurrentCharacterization(drive));
 
     // Configure the button bindings
     configureButtonBindings();

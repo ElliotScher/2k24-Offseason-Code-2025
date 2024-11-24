@@ -129,4 +129,12 @@ public class ModuleIOSim implements ModuleIO {
     turnClosedLoop = true;
     turnController.setSetpoint(rotation.getRadians());
   }
+
+  @Override
+  public void runCharacterization(double output) {
+    driveClosedLoop = false;
+    turnClosedLoop = true;
+    setDriveOpenLoop(output);
+    setTurnPosition(new Rotation2d());
+  }
 }

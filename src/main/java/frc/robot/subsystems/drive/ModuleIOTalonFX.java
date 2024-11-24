@@ -253,4 +253,21 @@ public class ModuleIOTalonFX implements ModuleIO {
               rotation.getRotations());
         });
   }
+
+  @Override
+  public void runCharacterization(double output) {
+    // Run drive motor characterization
+    driveTalon.setControl(
+        switch (constants.DriveMotorClosedLoopOutput) {
+          case Voltage -> torqueCurrentRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
+
+    // Run turn motor characterization
+    turnTalon.setControl(
+        switch (constants.SteerMotorClosedLoopOutput) {
+          case Voltage -> positionVoltageRequest.withPosition(0.0);
+          case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(0.0);
+        });
+  }
 }
