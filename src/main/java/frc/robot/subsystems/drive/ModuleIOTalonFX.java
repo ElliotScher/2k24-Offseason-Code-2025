@@ -290,7 +290,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     driveVelocityGoalRadiansPerSecond = velocityRadiansPerSecond;
     double velocityRotPerSec = Units.radiansToRotations(velocityRadiansPerSecond);
     driveTalon.setControl(
-        switch (constants.DriveMotorClosedLoopOutput) {
+        switch (DriveConstants.DRIVE_OUTPUT_TYPE) {
           case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
           case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
         });
@@ -300,7 +300,7 @@ public class ModuleIOTalonFX implements ModuleIO {
   public void setTurnPosition(Rotation2d rotation) {
     turnPositionGoal = rotation;
     turnTalon.setControl(
-        switch (constants.SteerMotorClosedLoopOutput) {
+        switch (DriveConstants.TURN_OUTPUT_TYPE) {
           case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());
           case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(
               rotation.getRotations());

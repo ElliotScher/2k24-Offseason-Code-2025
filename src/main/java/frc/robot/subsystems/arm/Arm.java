@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.RobotState;
+import frc.robot.commands.KSCharacterization;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
@@ -21,7 +22,7 @@ public class Arm extends SubsystemBase {
   private boolean isClosedLoop;
   private boolean isAmping;
   private boolean isSlowMode;
-  private final SysIdRoutine characterizationRoutine;
+  private final SysIdRoutine voltageCharacterizationRoutine;
 
   public Arm(ArmIO io) {
     inputs = new ArmIOInputsAutoLogged();
@@ -29,12 +30,12 @@ public class Arm extends SubsystemBase {
     positionSetpoint = ArmConstants.ARM_STOW_CONSTANT;
     isClosedLoop = true;
 
-    characterizationRoutine =
+    voltageCharacterizationRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
                 Volts.of(0.5).per(Second),
-                Volts.of(3.5),
-                Seconds.of(10),
+                Volts.of(1.5),
+                Seconds.of(2),
                 (state) -> Logger.recordOutput("Arm/sysIDState", state.toString())),
             new SysIdRoutine.Mechanism((volts) -> io.setArmVoltage(volts.in(Volts)), null, this));
   }
@@ -213,19 +214,24 @@ public class Arm extends SubsystemBase {
     return io.atSetpoint();
   }
 
-  public Command runQuasistaticCharacterization(Direction direction) {
-    return Commands.sequence(
-        Commands.runOnce(() -> isClosedLoop = false),
-        characterizationRoutine.quasistatic(direction));
-  }
-
-  public Command runDynamicCharacterization(Direction direction) {
-    return Commands.sequence(
-        Commands.runOnce(() -> isClosedLoop = false), characterizationRoutine.dynamic(direction));
-  }
-
   public Command runVoltage(double volts) {
     return Commands.run(() -> io.setArmVoltage(volts));
+  }
+
+  public Command runCharacterization() {
+    isClosedLoop = false;
+    return switch (ArmConstants.CLOSED_LOOP_OUTPUT_TYPE) {
+      case Voltage -> Commands.sequence(
+          voltageCharacterizationRoutine.quasistatic(Direction.kForward),
+          Commands.waitSeconds(5.0),
+          voltageCharacterizationRoutine.quasistatic(Direction.kReverse),
+          Commands.waitSeconds(5.0),
+          voltageCharacterizationRoutine.dynamic(Direction.kForward),
+          Commands.waitSeconds(5.0),
+          voltageCharacterizationRoutine.dynamic(Direction.kReverse));
+      case TorqueCurrentFOC -> new KSCharacterization(
+          this, (double amps) -> io.runCharacterization(amps), () -> inputs.armVelocityRadPerSec);
+    };
   }
 
   public Rotation2d getPosition() {

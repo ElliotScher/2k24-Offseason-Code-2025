@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -57,6 +58,10 @@ public class DriveConstants {
   // Simulation parameters
   public static final DCMotor DRIVE_GEARBOX;
   public static final DCMotor TURN_GEARBOX;
+
+  // Control
+  public static final ClosedLoopOutputType DRIVE_OUTPUT_TYPE;
+  public static final ClosedLoopOutputType TURN_OUTPUT_TYPE;
 
   static {
     switch (Constants.ROBOT) {
@@ -123,6 +128,9 @@ public class DriveConstants {
 
         AUTO_THETA_KP = 5.0;
         AUTO_THETA_KD = 0.05;
+
+        DRIVE_OUTPUT_TYPE = WhiplashTunerConstants.kDriveClosedLoopOutput;
+        TURN_OUTPUT_TYPE = WhiplashTunerConstants.kSteerClosedLoopOutput;
         break;
     }
     DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);

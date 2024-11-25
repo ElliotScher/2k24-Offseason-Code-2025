@@ -40,6 +40,7 @@ import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.Vision;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   // Subsystems
@@ -53,6 +54,10 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
+
+  // Auto chooser
+  private final LoggedDashboardChooser<Command> autoChooser =
+      new LoggedDashboardChooser<>("Auto Chooser");
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -106,6 +111,11 @@ public class RobotContainer {
     if (leds == null) {
       leds = new Leds();
     }
+
+    // Auto modes
+    autoChooser.addDefaultOption("None", Commands.none());
+    autoChooser.addOption("Drive Characterization", DriveCommands.runCharacterization(drive));
+    autoChooser.addOption("Arm Characterization", arm.runCharacterization());
 
     // Configure the button bindings
     configureButtonBindings();
@@ -163,6 +173,6 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return DriveCommands.feedforwardCharacterizationCurrent(drive);
+    return autoChooser.get();
   }
 }

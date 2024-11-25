@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.RobotState;
+import frc.robot.subsystems.arm.ArmConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import java.text.DecimalFormat;
@@ -164,7 +165,7 @@ public final class DriveCommands {
             });
   }
 
-  public static Command feedforwardCharacterizationVoltage(Drive drive) {
+  private static Command feedforwardCharacterizationVoltage(Drive drive) {
     double FF_START_DELAY = 2.0; // Secs
     double FF_RAMP_RATE = 0.1; // Volts/Sec
 
@@ -224,9 +225,16 @@ public final class DriveCommands {
                 }));
   }
 
-  public static Command feedforwardCharacterizationCurrent(Drive drive) {
+  private static Command feedforwardCharacterizationCurrent(Drive drive) {
     return new KSCharacterization(
         drive, drive::runCharacterization, drive::getFFCharacterizationVelocity);
+  }
+
+  public static Command runCharacterization(Drive drive) {
+    return switch (ArmConstants.CLOSED_LOOP_OUTPUT_TYPE) {
+      case Voltage -> feedforwardCharacterizationVoltage(drive);
+      case TorqueCurrentFOC -> feedforwardCharacterizationCurrent(drive);
+    };
   }
 
   public static Command wheelRadiusCharacterization(Drive drive) {

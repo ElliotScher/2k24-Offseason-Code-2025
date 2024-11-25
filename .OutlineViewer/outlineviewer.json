@@ -6,6 +6,9 @@
   "transitory": {
     "SmartDashboard": {
       "TunableNumbers": {
+        "Arm": {
+          "open": true
+        },
         "open": true
       },
       "open": true

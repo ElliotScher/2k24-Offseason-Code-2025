@@ -13,7 +13,6 @@ public interface ArmIO {
     public double armCurrentAmps = 0.0;
     public double armTemperatureCelsius = 0.0;
     public Rotation2d armAbsolutePosition = new Rotation2d();
-
     public Rotation2d positionSetpoint = new Rotation2d();
     public Rotation2d positionError = new Rotation2d();
     public Rotation2d positionGoal = new Rotation2d();
@@ -32,6 +31,8 @@ public interface ArmIO {
   public default void setProfile(double max_velocity, double max_acceleration) {}
 
   public default void setArmPosition(Rotation2d currentPosition, Rotation2d setpointPosition) {}
+
+  public default void runCharacterization(double output) {}
 
   public default boolean atSetpoint() {
     return false;
