@@ -22,13 +22,19 @@ public class Arm extends SubsystemBase {
   private boolean isClosedLoop;
   private boolean isAmping;
   private boolean isSlowMode;
+  private boolean downCharacterizationComplete;
   private final SysIdRoutine voltageCharacterizationRoutine;
+  private final Command currentCharacerizationRoutine;
+
+  private double downKs = 0.0;
+  private double upKs = 0.0;
 
   public Arm(ArmIO io) {
     inputs = new ArmIOInputsAutoLogged();
     this.io = io;
     positionSetpoint = ArmConstants.ARM_STOW_CONSTANT;
     isClosedLoop = true;
+    downCharacterizationComplete = false;
 
     voltageCharacterizationRoutine =
         new SysIdRoutine(
@@ -38,6 +44,20 @@ public class Arm extends SubsystemBase {
                 Seconds.of(2),
                 (state) -> Logger.recordOutput("Arm/sysIDState", state.toString())),
             new SysIdRoutine.Mechanism((volts) -> io.setArmVoltage(volts.in(Volts)), null, this));
+
+    currentCharacerizationRoutine =
+        new KSCharacterization(
+            this,
+            (double amps) -> {
+              io.runCharacterization(amps);
+              if (!downCharacterizationComplete) {
+                downKs = amps;
+              } else {
+                upKs = amps;
+              }
+            },
+            () -> inputs.armVelocityRadPerSec,
+            () -> inputs.armAbsolutePosition);
   }
 
   /**
@@ -229,8 +249,16 @@ public class Arm extends SubsystemBase {
           voltageCharacterizationRoutine.dynamic(Direction.kForward),
           Commands.waitSeconds(5.0),
           voltageCharacterizationRoutine.dynamic(Direction.kReverse));
-      case TorqueCurrentFOC -> new KSCharacterization(
-          this, (double amps) -> io.runCharacterization(amps), () -> inputs.armVelocityRadPerSec);
+      case TorqueCurrentFOC -> Commands.sequence(
+          currentCharacerizationRoutine,
+          preAmpAngle(),
+          Commands.waitUntil(() -> atSetpoint()),
+          Commands.runOnce(() -> isClosedLoop = false),
+          currentCharacerizationRoutine,
+          Commands.print("********** FF Characterization Results **********\n"),
+          Commands.print("KS:\t" + upKs),
+          Commands.print("KG:\t" + (downKs - upKs)),
+          Commands.runOnce(() -> downCharacterizationComplete = false));
     };
   }
 
