@@ -119,8 +119,8 @@ public final class DriveCommands {
                   robotRelativeYVel,
                   angular,
                   isFlipped
-                      ? RobotState.getRobotPose().getRotation().plus(new Rotation2d(Math.PI))
-                      : RobotState.getRobotPose().getRotation());
+                      ? drive.getRawGyroRotation().plus(new Rotation2d(Math.PI))
+                      : drive.getRawGyroRotation());
 
           // Convert to field relative speeds & send command
           drive.runVelocity(chassisSpeeds);
