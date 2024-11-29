@@ -26,8 +26,7 @@ public class RobotState {
       new InterpolatingDoubleTreeMap();
 
   @Getter
-  private static ControlData controlData =
-      new ControlData(new Rotation2d(), 0.0, new Rotation2d(), false, false, false);
+  private static ControlData controlData = new ControlData(new Rotation2d(), 0.0, new Rotation2d());
 
   @Getter @Setter private static double speakerFlywheelCompensation = 0.0;
   @Getter @Setter private static double speakerAngleCompensation = 0.0;
@@ -64,9 +63,13 @@ public class RobotState {
 
     poseEstimator =
         new SwerveDrivePoseEstimator(
-            DriveConstants.KINEMATICS, new Rotation2d(), modulePositions, new Pose2d());
+            DriveConstants.DRIVE_CONFIG.kinematics(),
+            new Rotation2d(),
+            modulePositions,
+            new Pose2d());
     odometry =
-        new SwerveDriveOdometry(DriveConstants.KINEMATICS, new Rotation2d(), modulePositions);
+        new SwerveDriveOdometry(
+            DriveConstants.DRIVE_CONFIG.kinematics(), new Rotation2d(), modulePositions);
     headingOffset = new Rotation2d();
   }
 
@@ -78,10 +81,7 @@ public class RobotState {
       double robotYawVelocity,
       Translation2d robotFieldRelativeVelocity,
       SwerveModulePosition[] modulePositions,
-      Camera[] cameras,
-      boolean hasNoteLocked,
-      boolean hasNoteStaged,
-      boolean isIntaking) {
+      Camera[] cameras) {
 
     RobotState.robotHeading = robotHeading;
     RobotState.modulePositions = modulePositions;
@@ -150,10 +150,7 @@ public class RobotState {
         new ControlData(
             speakerRobotAngle,
             speakerRadialVelocity,
-            new Rotation2d(speakerShotAngleMap.get(effectiveDistanceToSpeaker)),
-            hasNoteLocked,
-            hasNoteStaged,
-            isIntaking);
+            new Rotation2d(speakerShotAngleMap.get(effectiveDistanceToSpeaker)));
 
     Logger.recordOutput(
         "RobotState/Pose Data/Estimated Pose", poseEstimator.getEstimatedPosition());
@@ -187,10 +184,5 @@ public class RobotState {
   }
 
   public static record ControlData(
-      Rotation2d speakerRobotAngle,
-      double speakerRadialVelocity,
-      Rotation2d speakerArmAngle,
-      boolean hasNoteLocked,
-      boolean hasNoteStaged,
-      boolean isIntaking) {}
+      Rotation2d speakerRobotAngle, double speakerRadialVelocity, Rotation2d speakerArmAngle) {}
 }

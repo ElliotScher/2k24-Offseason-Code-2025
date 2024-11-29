@@ -13,10 +13,9 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Volts;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -27,22 +26,23 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
+import lombok.Getter;
 
 public final class DriveCommands {
+  @Getter
   private static PIDController aimController =
       new PIDController(
-          DriveConstants.AUTO_THETA_KP,
+          DriveConstants.AUTO_ALIGN_GAINS.rotation_Kp(),
           0,
-          DriveConstants.AUTO_THETA_KD,
+          DriveConstants.AUTO_ALIGN_GAINS.rotation_Kd(),
           Constants.LOOP_PERIOD_SECONDS);
 
   /**
@@ -84,8 +84,10 @@ public final class DriveCommands {
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
 
-          double robotRelativeXVel = linearVelocity.getX() * DriveConstants.MAX_LINEAR_VELOCITY;
-          double robotRelativeYVel = linearVelocity.getY() * DriveConstants.MAX_LINEAR_VELOCITY;
+          double robotRelativeXVel =
+              linearVelocity.getX() * DriveConstants.DRIVE_CONFIG.maxLinearVelocity();
+          double robotRelativeYVel =
+              linearVelocity.getY() * DriveConstants.DRIVE_CONFIG.maxLinearVelocity();
 
           double angular = 0.0;
 
@@ -108,7 +110,7 @@ public final class DriveCommands {
                         RobotState.getRobotPose().getRotation().getRadians(),
                         Rotation2d.fromDegrees(-35.5).getRadians()));
           } else {
-            angular = omega * DriveConstants.MAX_ANGULAR_VELOCITY;
+            angular = omega * DriveConstants.DRIVE_CONFIG.maxAngularVelocity();
           }
 
           ChassisSpeeds chassisSpeeds =
@@ -157,35 +159,94 @@ public final class DriveCommands {
             });
   }
 
-  public static final Command stop(Drive drive) {
-    return Commands.run(() -> drive.stopWithX());
+  public static final Command runFFCharacterization(Drive drive) {
+    return new KSCharacterization(
+        drive, drive::runCharacterization, drive::getFFCharacterizationVelocity);
   }
 
-  public static final Command runSysIdQuasistatic(Drive drive, Direction direction) {
-    return new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (volts) -> drive.runCharacterization(volts.in(Volts)), null, drive))
-        .quasistatic(direction);
+  public static final Command wheelRadiusCharacterization(Drive drive) {
+    double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
+    double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+    SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
+    WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
+
+    return Commands.runOnce(
+            () -> {
+              limiter.reset(0.0);
+            })
+        .andThen(
+            Commands.parallel(
+                // Drive control sequence
+                Commands.sequence(
+                    // Reset acceleration limiter
+                    Commands.runOnce(
+                        () -> {
+                          limiter.reset(0.0);
+                        }),
+
+                    // Turn in place, accelerating up to full speed
+                    Commands.run(
+                        () -> {
+                          double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
+                          drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                        },
+                        drive)),
+
+                // Measurement sequence
+                Commands.sequence(
+                    // Wait for modules to fully orient before starting measurement
+                    Commands.waitSeconds(1.0),
+
+                    // Record starting measurement
+                    Commands.runOnce(
+                        () -> {
+                          state.positions = drive.getWheelRadiusCharacterizationPositions();
+                          state.lastAngle = drive.getRawGyroRotation();
+                          state.gyroDelta = 0.0;
+                        }),
+
+                    // Update gyro delta
+                    Commands.run(
+                            () -> {
+                              var rotation = drive.getRawGyroRotation();
+                              state.gyroDelta +=
+                                  Math.abs(rotation.minus(state.lastAngle).getRadians());
+                              state.lastAngle = rotation;
+                            })
+
+                        // When cancelled, calculate and print results
+                        .finallyDo(
+                            () -> {
+                              double[] positions = drive.getWheelRadiusCharacterizationPositions();
+                              double wheelDelta = 0.0;
+                              for (int i = 0; i < 4; i++) {
+                                wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
+                              }
+                              double wheelRadius =
+                                  (state.gyroDelta * DriveConstants.DRIVE_CONFIG.driveBaseRadius())
+                                      / wheelDelta;
+
+                              NumberFormat formatter = new DecimalFormat("#0.000");
+                              System.out.println(
+                                  "********** Wheel Radius Characterization Results **********");
+                              System.out.println(
+                                  "\tWheel Delta: " + formatter.format(wheelDelta) + " radians");
+                              System.out.println(
+                                  "\tGyro Delta: "
+                                      + formatter.format(state.gyroDelta)
+                                      + " radians");
+                              System.out.println(
+                                  "\tWheel Radius: "
+                                      + formatter.format(wheelRadius)
+                                      + " meters, "
+                                      + formatter.format(Units.metersToInches(wheelRadius))
+                                      + " inches");
+                            }))));
   }
 
-  public static final Command runSysIdDynamic(Drive drive, Direction direction) {
-    return new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (volts) -> drive.runCharacterization(volts.in(Volts)), null, drive))
-        .dynamic(direction);
-  }
-
-  public static final boolean atAimSetpoint() {
-    return aimController.atSetpoint();
+  private static class WheelRadiusCharacterizationState {
+    double[] positions = new double[4];
+    Rotation2d lastAngle = new Rotation2d();
+    double gyroDelta = 0.0;
   }
 }

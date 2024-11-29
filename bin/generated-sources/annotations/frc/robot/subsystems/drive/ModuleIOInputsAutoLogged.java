@@ -1,65 +1,78 @@
 package frc.robot.subsystems.drive;
 
-import java.lang.Cloneable;
-import java.lang.Override;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public class ModuleIOInputsAutoLogged extends ModuleIO.ModuleIOInputs implements LoggableInputs, Cloneable {
+public class ModuleIOInputsAutoLogged extends ModuleIO.ModuleIOInputs
+    implements LoggableInputs, Cloneable {
   @Override
   public void toLog(LogTable table) {
-    table.put("DriveConnected", driveConnected);
-    table.put("DrivePositionRad", drivePositionRad);
-    table.put("DriveVelocityRadPerSec", driveVelocityRadPerSec);
+    table.put("DrivePosition", drivePosition);
+    table.put("DriveVelocityRadiansPerSecond", driveVelocityRadiansPerSecond);
     table.put("DriveAppliedVolts", driveAppliedVolts);
-    table.put("DriveCurrentAmps", driveCurrentAmps);
-    table.put("TurnConnected", turnConnected);
-    table.put("TurnEncoderConnected", turnEncoderConnected);
+    table.put("DriveSupplyCurrentAmps", driveSupplyCurrentAmps);
+    table.put("DriveTorqueCurrentAmps", driveTorqueCurrentAmps);
+    table.put("DriveTemperatureCelcius", driveTemperatureCelcius);
     table.put("TurnAbsolutePosition", turnAbsolutePosition);
     table.put("TurnPosition", turnPosition);
-    table.put("TurnVelocityRadPerSec", turnVelocityRadPerSec);
+    table.put("TurnVelocityRadiansPerSecond", turnVelocityRadiansPerSecond);
     table.put("TurnAppliedVolts", turnAppliedVolts);
-    table.put("TurnCurrentAmps", turnCurrentAmps);
+    table.put("TurnSupplyCurrentAmps", turnSupplyCurrentAmps);
+    table.put("TurnTorqueCurrentAmps", turnTorqueCurrentAmps);
+    table.put("TurnTemperatureCelcius", turnTemperatureCelcius);
+    table.put("DriveConnected", driveConnected);
+    table.put("TurnConnected", turnConnected);
+    table.put("TurnEncoderConnected", turnEncoderConnected);
     table.put("OdometryTimestamps", odometryTimestamps);
-    table.put("OdometryDrivePositionsRad", odometryDrivePositionsRad);
+    table.put("OdometryDrivePositions", odometryDrivePositions);
     table.put("OdometryTurnPositions", odometryTurnPositions);
   }
 
   @Override
   public void fromLog(LogTable table) {
-    driveConnected = table.get("DriveConnected", driveConnected);
-    drivePositionRad = table.get("DrivePositionRad", drivePositionRad);
-    driveVelocityRadPerSec = table.get("DriveVelocityRadPerSec", driveVelocityRadPerSec);
+    drivePosition = table.get("DrivePosition", drivePosition);
+    driveVelocityRadiansPerSecond =
+        table.get("DriveVelocityRadiansPerSecond", driveVelocityRadiansPerSecond);
     driveAppliedVolts = table.get("DriveAppliedVolts", driveAppliedVolts);
-    driveCurrentAmps = table.get("DriveCurrentAmps", driveCurrentAmps);
-    turnConnected = table.get("TurnConnected", turnConnected);
-    turnEncoderConnected = table.get("TurnEncoderConnected", turnEncoderConnected);
+    driveSupplyCurrentAmps = table.get("DriveSupplyCurrentAmps", driveSupplyCurrentAmps);
+    driveTorqueCurrentAmps = table.get("DriveTorqueCurrentAmps", driveTorqueCurrentAmps);
+    driveTemperatureCelcius = table.get("DriveTemperatureCelcius", driveTemperatureCelcius);
     turnAbsolutePosition = table.get("TurnAbsolutePosition", turnAbsolutePosition);
     turnPosition = table.get("TurnPosition", turnPosition);
-    turnVelocityRadPerSec = table.get("TurnVelocityRadPerSec", turnVelocityRadPerSec);
+    turnVelocityRadiansPerSecond =
+        table.get("TurnVelocityRadiansPerSecond", turnVelocityRadiansPerSecond);
     turnAppliedVolts = table.get("TurnAppliedVolts", turnAppliedVolts);
-    turnCurrentAmps = table.get("TurnCurrentAmps", turnCurrentAmps);
+    turnSupplyCurrentAmps = table.get("TurnSupplyCurrentAmps", turnSupplyCurrentAmps);
+    turnTorqueCurrentAmps = table.get("TurnTorqueCurrentAmps", turnTorqueCurrentAmps);
+    turnTemperatureCelcius = table.get("TurnTemperatureCelcius", turnTemperatureCelcius);
+    driveConnected = table.get("DriveConnected", driveConnected);
+    turnConnected = table.get("TurnConnected", turnConnected);
+    turnEncoderConnected = table.get("TurnEncoderConnected", turnEncoderConnected);
     odometryTimestamps = table.get("OdometryTimestamps", odometryTimestamps);
-    odometryDrivePositionsRad = table.get("OdometryDrivePositionsRad", odometryDrivePositionsRad);
+    odometryDrivePositions = table.get("OdometryDrivePositions", odometryDrivePositions);
     odometryTurnPositions = table.get("OdometryTurnPositions", odometryTurnPositions);
   }
 
   public ModuleIOInputsAutoLogged clone() {
     ModuleIOInputsAutoLogged copy = new ModuleIOInputsAutoLogged();
-    copy.driveConnected = this.driveConnected;
-    copy.drivePositionRad = this.drivePositionRad;
-    copy.driveVelocityRadPerSec = this.driveVelocityRadPerSec;
+    copy.drivePosition = this.drivePosition;
+    copy.driveVelocityRadiansPerSecond = this.driveVelocityRadiansPerSecond;
     copy.driveAppliedVolts = this.driveAppliedVolts;
-    copy.driveCurrentAmps = this.driveCurrentAmps;
-    copy.turnConnected = this.turnConnected;
-    copy.turnEncoderConnected = this.turnEncoderConnected;
+    copy.driveSupplyCurrentAmps = this.driveSupplyCurrentAmps;
+    copy.driveTorqueCurrentAmps = this.driveTorqueCurrentAmps;
+    copy.driveTemperatureCelcius = this.driveTemperatureCelcius;
     copy.turnAbsolutePosition = this.turnAbsolutePosition;
     copy.turnPosition = this.turnPosition;
-    copy.turnVelocityRadPerSec = this.turnVelocityRadPerSec;
+    copy.turnVelocityRadiansPerSecond = this.turnVelocityRadiansPerSecond;
     copy.turnAppliedVolts = this.turnAppliedVolts;
-    copy.turnCurrentAmps = this.turnCurrentAmps;
+    copy.turnSupplyCurrentAmps = this.turnSupplyCurrentAmps;
+    copy.turnTorqueCurrentAmps = this.turnTorqueCurrentAmps;
+    copy.turnTemperatureCelcius = this.turnTemperatureCelcius;
+    copy.driveConnected = this.driveConnected;
+    copy.turnConnected = this.turnConnected;
+    copy.turnEncoderConnected = this.turnEncoderConnected;
     copy.odometryTimestamps = this.odometryTimestamps.clone();
-    copy.odometryDrivePositionsRad = this.odometryDrivePositionsRad.clone();
+    copy.odometryDrivePositions = this.odometryDrivePositions.clone();
     copy.odometryTurnPositions = this.odometryTurnPositions.clone();
     return copy;
   }

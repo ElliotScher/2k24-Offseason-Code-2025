@@ -1,11 +1,10 @@
 package frc.robot.subsystems.vision;
 
-import java.lang.Cloneable;
-import java.lang.Override;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public class CameraIOInputsAutoLogged extends CameraIO.CameraIOInputs implements LoggableInputs, Cloneable {
+public class CameraIOInputsAutoLogged extends CameraIO.CameraIOInputs
+    implements LoggableInputs, Cloneable {
   @Override
   public void toLog(LogTable table) {
     table.put("XOffset", xOffset);

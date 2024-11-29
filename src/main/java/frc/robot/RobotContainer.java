@@ -22,37 +22,27 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.CompositeCommands;
 import frc.robot.commands.DriveCommands;
-import frc.robot.subsystems.arm.Arm;
-import frc.robot.subsystems.arm.ArmIO;
-import frc.robot.subsystems.arm.ArmIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
-import frc.robot.subsystems.leds.Leds;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.Vision;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   // Subsystems
   private Drive drive;
-  private Intake intake;
   private Vision vision;
-  private Shooter shooter;
-  private Arm arm;
-  private Leds leds;
 
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
-  private final CommandXboxController operator = new CommandXboxController(1);
+
+  // Auto chooser
+  private final LoggedDashboardChooser<Command> autoChooser =
+      new LoggedDashboardChooser<>("Auto Mode");
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -66,14 +56,10 @@ public class RobotContainer {
                   new ModuleIOTalonFX(DriveConstants.FRONT_RIGHT),
                   new ModuleIOTalonFX(DriveConstants.BACK_LEFT),
                   new ModuleIOTalonFX(DriveConstants.BACK_RIGHT));
-          intake = new Intake(new IntakeIOTalonFX());
           vision =
               new Vision(
                   CameraConstants.RobotCameras.LEFT_CAMERA,
                   CameraConstants.RobotCameras.RIGHT_CAMERA);
-          shooter = new Shooter(new ShooterIOTalonFX());
-          arm = new Arm(new ArmIOTalonFX());
-          leds = new Leds();
           break;
       }
     }
@@ -88,24 +74,15 @@ public class RobotContainer {
               new ModuleIO() {},
               new ModuleIO() {});
     }
-    if (intake == null) {
-      intake = new Intake(new IntakeIO() {});
-    }
     if (vision == null) {
       vision =
           new Vision(
               CameraConstants.ReplayCameras.LEFT_CAMERA,
               CameraConstants.ReplayCameras.RIGHT_CAMERA);
     }
-    if (shooter == null) {
-      shooter = new Shooter(new ShooterIO() {});
-    }
-    if (arm == null) {
-      arm = new Arm(new ArmIO() {});
-    }
-    if (leds == null) {
-      leds = new Leds();
-    }
+
+    autoChooser.addDefaultOption("None", Commands.none());
+    autoChooser.addOption("Drive Characterization", DriveCommands.runFFCharacterization(drive));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -122,16 +99,6 @@ public class RobotContainer {
             driver.axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.05),
             driver.b()));
     driver.y().onTrue(CompositeCommands.resetHeading(drive));
-    driver.leftBumper().whileTrue(CompositeCommands.collect(intake, arm));
-    driver.leftTrigger().whileTrue(CompositeCommands.eject(intake, arm));
-    driver
-        .rightBumper()
-        .whileTrue(CompositeCommands.shootSpeaker(drive, intake, arm, shooter, driver.getHID()));
-    driver.x().whileTrue(CompositeCommands.shootSubwoofer(intake, arm, shooter));
-    driver
-        .axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.95)
-        .whileTrue(CompositeCommands.shootAmp(intake, arm, shooter));
-    driver.axisGreaterThan(XboxController.Axis.kRightTrigger.value, 0.05).whileTrue(arm.ampAngle());
     driver
         .povUp()
         .onTrue(
@@ -142,8 +109,6 @@ public class RobotContainer {
                                 FieldConstants.Subwoofer.centerFace.getTranslation(),
                                 RobotState.getRobotPose().getRotation())))
                 .ignoringDisable(true));
-    driver.a().whileTrue(CompositeCommands.shootFeed(intake, arm, shooter));
-    operator.leftBumper().whileTrue(CompositeCommands.collect(intake, arm));
   }
 
   public void robotPeriodic() {
@@ -153,11 +118,7 @@ public class RobotContainer {
         drive.getYawVelocity(),
         drive.getFieldRelativeVelocity(),
         drive.getModulePositions(),
-        vision.getCameras(),
-        intake.hasNoteLocked(),
-        intake.hasNoteStaged(),
-        intake.isIntaking());
-    leds.periodic();
+        vision.getCameras());
   }
 
   public Command getAutonomousCommand() {

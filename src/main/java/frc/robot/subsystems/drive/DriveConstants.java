@@ -1,131 +1,115 @@
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants;
-import frc.robot.constants.WhiplashTunerConstants;
+import frc.robot.util.LoggedTunableNumber;
 
 public class DriveConstants {
-  // CAN
-  public static final String CAN_BUS;
-  public static final int GYRO_CAN_ID;
-  public static final double ODOMETRY_FREQUENCY;
+  public static final DriveConfig DRIVE_CONFIG;
 
-  // Kinematics
-  public static final double TRACK_WIDTH_X;
-  public static final double TRACK_WIDTH_Y;
-  public static final double WHEEL_RADIUS;
-  public static final double MAX_LINEAR_VELOCITY;
-  public static final double MAX_ANGULAR_VELOCITY;
-  public static final double DRIVE_BASE_RADIUS;
-  public static final SwerveDriveKinematics KINEMATICS;
-
-  // Modules
   public static final SwerveModuleConstants FRONT_LEFT;
   public static final SwerveModuleConstants FRONT_RIGHT;
   public static final SwerveModuleConstants BACK_LEFT;
   public static final SwerveModuleConstants BACK_RIGHT;
 
-  // Drive
+  public static final Gains GAINS;
+  public static final AutoAlignGains AUTO_ALIGN_GAINS;
+
+  public static final double ODOMETRY_FREQUENCY;
   public static final double DRIVER_DEADBAND;
-
-  // Module Gains
-  public static final double DRIVE_KP;
-  public static final double DRIVE_KD;
-  public static final double TURN_KP;
-  public static final double TURN_KD;
-
-  public static final double DRIVE_KS;
-  public static final double DRIVE_KV;
-
-  // Autonomous Gains
-  public static final double AUTO_X_KP;
-  public static final double AUTO_X_KD;
-
-  public static final double AUTO_Y_KP;
-  public static final double AUTO_Y_KD;
-
-  public static final double AUTO_THETA_KP;
-  public static final double AUTO_THETA_KD;
-
-  // Simulation parameters
-  public static final DCMotor DRIVE_GEARBOX;
-  public static final DCMotor TURN_GEARBOX;
 
   static {
     switch (Constants.ROBOT) {
       case WHIPLASH:
       default:
-        CAN_BUS = WhiplashTunerConstants.DrivetrainConstants.CANBusName;
-        GYRO_CAN_ID = WhiplashTunerConstants.DrivetrainConstants.Pigeon2Id;
-        ODOMETRY_FREQUENCY = new CANBus(CAN_BUS).isNetworkFD() ? 250.0 : 100.0;
-
-        TRACK_WIDTH_X =
-            Math.abs(WhiplashTunerConstants.FrontLeft.LocationX)
-                + Math.abs(WhiplashTunerConstants.FrontRight.LocationX);
-        TRACK_WIDTH_Y =
-            Math.abs(WhiplashTunerConstants.FrontLeft.LocationY)
-                + Math.abs(WhiplashTunerConstants.BackLeft.LocationY);
-        WHEEL_RADIUS = WhiplashTunerConstants.kWheelRadius.in(Meters);
-        MAX_LINEAR_VELOCITY = WhiplashTunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-        DRIVE_BASE_RADIUS =
-            Math.max(
-                Math.max(
-                    Math.hypot(
-                        WhiplashTunerConstants.FrontLeft.LocationX,
-                        WhiplashTunerConstants.FrontRight.LocationY),
-                    Math.hypot(
-                        WhiplashTunerConstants.FrontRight.LocationX,
-                        WhiplashTunerConstants.FrontRight.LocationY)),
-                Math.max(
-                    Math.hypot(
-                        WhiplashTunerConstants.BackLeft.LocationX,
-                        WhiplashTunerConstants.BackLeft.LocationY),
-                    Math.hypot(
-                        WhiplashTunerConstants.BackRight.LocationX,
-                        WhiplashTunerConstants.BackRight.LocationY)));
-        MAX_ANGULAR_VELOCITY = (MAX_LINEAR_VELOCITY / DRIVE_BASE_RADIUS);
-        KINEMATICS =
-            new SwerveDriveKinematics(
-                new Translation2d[] {
-                  new Translation2d(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
-                  new Translation2d(TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0),
-                  new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
-                  new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
-                });
+        DRIVE_CONFIG =
+            new DriveConfig(
+                WhiplashTunerConstants.DrivetrainConstants.CANBusName,
+                WhiplashTunerConstants.DrivetrainConstants.Pigeon2Id,
+                WhiplashTunerConstants.FrontLeft.WheelRadius,
+                Math.abs(WhiplashTunerConstants.FrontLeft.LocationX)
+                    + Math.abs(WhiplashTunerConstants.FrontRight.LocationX),
+                Math.abs(WhiplashTunerConstants.FrontLeft.LocationY)
+                    + Math.abs(WhiplashTunerConstants.BackLeft.LocationY),
+                WhiplashTunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+                DCMotor.getKrakenX60Foc(1),
+                DCMotor.getKrakenX60Foc(1));
 
         FRONT_LEFT = WhiplashTunerConstants.FrontLeft;
         FRONT_RIGHT = WhiplashTunerConstants.FrontRight;
         BACK_LEFT = WhiplashTunerConstants.BackLeft;
         BACK_RIGHT = WhiplashTunerConstants.BackRight;
 
+        GAINS =
+            new Gains(
+                WhiplashTunerConstants.FrontLeft.DriveMotorGains.kS,
+                WhiplashTunerConstants.FrontLeft.DriveMotorGains.kV,
+                new LoggedTunableNumber(
+                    "Drive/Gains/Drive Kp", WhiplashTunerConstants.FrontLeft.DriveMotorGains.kP),
+                new LoggedTunableNumber(
+                    "Drive/Gains/Drive Kd", WhiplashTunerConstants.FrontLeft.DriveMotorGains.kD),
+                new LoggedTunableNumber(
+                    "Drive/Gains/Turn Kp", WhiplashTunerConstants.FrontLeft.SteerMotorGains.kP),
+                new LoggedTunableNumber(
+                    "Drive/Gains/Turn Kd", WhiplashTunerConstants.FrontLeft.SteerMotorGains.kD));
+
+        AUTO_ALIGN_GAINS = new AutoAlignGains(4.0, 0.0, 5.0, 0.05);
+
+        ODOMETRY_FREQUENCY = 250.0;
         DRIVER_DEADBAND = 0.025;
-
-        DRIVE_KP = WhiplashTunerConstants.driveGains.kP;
-        DRIVE_KD = WhiplashTunerConstants.driveGains.kD;
-        TURN_KP = WhiplashTunerConstants.steerGains.kP;
-        TURN_KD = WhiplashTunerConstants.steerGains.kD;
-
-        DRIVE_KS = WhiplashTunerConstants.driveGains.kS;
-        DRIVE_KV = WhiplashTunerConstants.driveGains.kV;
-
-        AUTO_X_KP = 4.0;
-        AUTO_X_KD = 0.0;
-
-        AUTO_Y_KP = 4.0;
-        AUTO_Y_KD = 0.0;
-
-        AUTO_THETA_KP = 5.0;
-        AUTO_THETA_KD = 0.05;
         break;
     }
-    DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
-    TURN_GEARBOX = DCMotor.getKrakenX60Foc(1);
   }
+
+  public record DriveConfig(
+      String canBus,
+      int pigeon2Id,
+      double wheelRadius,
+      double trackWidthX,
+      double trackWidthY,
+      double maxLinearVelocity,
+      DCMotor driveModel,
+      DCMotor turnModel) {
+    public double driveBaseRadius() {
+      return Math.hypot(trackWidthX / 2.0, trackWidthY / 2.0);
+    }
+
+    public double maxAngularVelocity() {
+      return maxLinearVelocity / driveBaseRadius();
+    }
+
+    public Translation2d[] getModuleTranslations() {
+      return new Translation2d[] {
+        new Translation2d(
+            WhiplashTunerConstants.FrontLeft.LocationX, WhiplashTunerConstants.FrontLeft.LocationY),
+        new Translation2d(
+            WhiplashTunerConstants.FrontRight.LocationX,
+            WhiplashTunerConstants.FrontRight.LocationY),
+        new Translation2d(
+            WhiplashTunerConstants.BackLeft.LocationX, WhiplashTunerConstants.BackLeft.LocationY),
+        new Translation2d(
+            WhiplashTunerConstants.BackRight.LocationX, WhiplashTunerConstants.BackRight.LocationY)
+      };
+    }
+
+    public SwerveDriveKinematics kinematics() {
+      return new SwerveDriveKinematics(getModuleTranslations());
+    }
+  }
+
+  public record Gains(
+      double driveKs,
+      double driveKv,
+      LoggedTunableNumber driveKp,
+      LoggedTunableNumber driveKd,
+      LoggedTunableNumber turnKp,
+      LoggedTunableNumber turnKd) {}
+
+  public record AutoAlignGains(
+      double translation_Kp, double translation_Kd, double rotation_Kp, double rotation_Kd) {}
 }
