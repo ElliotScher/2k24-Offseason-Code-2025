@@ -25,6 +25,8 @@ public interface ModuleIO {
     public double driveSupplyCurrentAmps = 0.0;
     public double driveTorqueCurrentAmps = 0.0;
     public double driveTemperatureCelcius = 0.0;
+    public double driveVelocitySetpointRadiansPerSecond = 0.0;
+    public double driveVelocityErrorRadiansPerSecond = 0.0;
 
     public Rotation2d turnAbsolutePosition = new Rotation2d();
     public Rotation2d turnPosition = new Rotation2d();
@@ -33,6 +35,9 @@ public interface ModuleIO {
     public double turnSupplyCurrentAmps = 0.0;
     public double turnTorqueCurrentAmps = 0.0;
     public double turnTemperatureCelcius = 0.0;
+    public Rotation2d turnPositionGoal = new Rotation2d();
+    public Rotation2d turnPositionSetpoint = new Rotation2d();
+    public Rotation2d turnPositionError = new Rotation2d();
 
     public boolean driveConnected = false;
     public boolean turnConnected = false;

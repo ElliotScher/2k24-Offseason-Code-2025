@@ -35,15 +35,27 @@ import java.text.NumberFormat;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
+import org.littletonrobotics.junction.Logger;
 
 public final class DriveCommands {
-  @Getter
-  private static PIDController aimController =
-      new PIDController(
-          DriveConstants.AUTO_ALIGN_GAINS.rotation_Kp(),
-          0,
-          DriveConstants.AUTO_ALIGN_GAINS.rotation_Kd(),
-          Constants.LOOP_PERIOD_SECONDS);
+  @Getter private static PIDController aimController;
+  @Getter private static Rotation2d aimHeading;
+  private static double aimFeedforward;
+  private static boolean isAiming;
+
+  static {
+    aimController =
+        new PIDController(
+            DriveConstants.AUTO_ALIGN_GAINS.rotation_Kp(),
+            0,
+            DriveConstants.AUTO_ALIGN_GAINS.rotation_Kd(),
+            Constants.LOOP_PERIOD_SECONDS);
+
+    aimController.enableContinuousInput(-Math.PI, Math.PI);
+    aimController.setTolerance(Units.degreesToRadians(1.0));
+
+    aimHeading = new Rotation2d();
+  }
 
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
@@ -58,8 +70,6 @@ public final class DriveCommands {
       BooleanSupplier feedAim) {
     return Commands.run(
         () -> {
-          aimController.enableContinuousInput(-Math.PI, Math.PI);
-
           // Apply deadband
           double linearMagnitude =
               MathUtil.applyDeadband(
@@ -89,48 +99,46 @@ public final class DriveCommands {
           double robotRelativeYVel =
               linearVelocity.getY() * DriveConstants.DRIVE_CONFIG.maxLinearVelocity();
 
-          double angular = 0.0;
-
           if (speakerAim.getAsBoolean()) {
-            angular =
-                RobotState.getControlData().speakerRadialVelocity()
-                    + (aimController.calculate(
-                        RobotState.getRobotPose().getRotation().getRadians(),
-                        RobotState.getControlData().speakerRobotAngle().getRadians()));
+            isAiming = true;
+            aimHeading = RobotState.getControlData().speakerRobotAngle();
+            aimFeedforward = RobotState.getControlData().speakerRadialVelocity();
           } else if (ampAim.getAsBoolean()) {
-            angular =
-                RobotState.getControlData().speakerRadialVelocity()
-                    + (aimController.calculate(
-                        RobotState.getRobotPose().getRotation().getRadians(),
-                        Rotation2d.fromDegrees(90.0).getRadians()));
+            isAiming = true;
+            aimHeading = Rotation2d.fromDegrees(90.0);
+            aimFeedforward = RobotState.getControlData().ampRadialVelocity();
           } else if (feedAim.getAsBoolean()) {
-            angular =
-                RobotState.getControlData().speakerRadialVelocity()
-                    + (aimController.calculate(
-                        RobotState.getRobotPose().getRotation().getRadians(),
-                        Rotation2d.fromDegrees(-35.5).getRadians()));
+            isAiming = true;
+            aimHeading = RobotState.getControlData().feedRobotAngle();
+            aimFeedforward = RobotState.getControlData().feedRadialVelocity();
           } else {
-            angular = omega * DriveConstants.DRIVE_CONFIG.maxAngularVelocity();
+            isAiming = false;
+            aimFeedforward = omega * DriveConstants.DRIVE_CONFIG.maxAngularVelocity();
           }
 
           ChassisSpeeds chassisSpeeds =
               ChassisSpeeds.fromFieldRelativeSpeeds(
                   robotRelativeXVel,
                   robotRelativeYVel,
-                  angular,
+                  isAiming
+                      ? aimFeedforward
+                          + aimController.calculate(
+                              RobotState.getRobotPose().getRotation().getRadians(),
+                              aimHeading.getRadians())
+                      : omega * DriveConstants.DRIVE_CONFIG.maxAngularVelocity(),
                   isFlipped
                       ? drive.getRawGyroRotation().plus(new Rotation2d(Math.PI))
                       : drive.getRawGyroRotation());
 
           // Convert to field relative speeds & send command
           drive.runVelocity(chassisSpeeds);
+          Logger.recordOutput("Drive/Aim Heading", aimHeading);
+          Logger.recordOutput("Drive/Aim Feedforward", aimFeedforward);
         },
         drive);
   }
 
   public static final Command aimTowardSpeaker(Drive drive) {
-    aimController.setTolerance(Units.degreesToRadians(1.0));
-    aimController.enableContinuousInput(-Math.PI, Math.PI);
     return Commands.run(
             () -> {
               boolean isFlipped =

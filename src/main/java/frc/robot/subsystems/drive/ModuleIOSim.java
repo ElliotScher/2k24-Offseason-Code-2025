@@ -89,12 +89,17 @@ public class ModuleIOSim implements ModuleIO {
     inputs.driveVelocityRadiansPerSecond = driveSim.getAngularVelocityRadPerSec();
     inputs.driveAppliedVolts = driveAppliedVolts;
     inputs.driveSupplyCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
+    inputs.driveVelocitySetpointRadiansPerSecond = driveController.getSetpoint();
+    inputs.driveVelocityErrorRadiansPerSecond = driveController.getError();
 
     inputs.turnAbsolutePosition = new Rotation2d(turnSim.getAngularPositionRad());
     inputs.turnPosition = new Rotation2d(turnSim.getAngularPositionRad());
     inputs.turnVelocityRadiansPerSecond = turnSim.getAngularVelocityRadPerSec();
     inputs.turnAppliedVolts = turnAppliedVolts;
     inputs.turnSupplyCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
+    inputs.turnPositionGoal = Rotation2d.fromRadians(turnController.getSetpoint());
+    inputs.turnPositionSetpoint = Rotation2d.fromRadians(turnController.getSetpoint());
+    inputs.turnPositionError = Rotation2d.fromRadians(turnController.getError());
 
     inputs.driveConnected = true;
     inputs.turnConnected = true;
