@@ -29,34 +29,34 @@ public class DriveConstants {
       default:
         DRIVE_CONFIG =
             new DriveConfig(
-                WhiplashTunerConstants.DrivetrainConstants.CANBusName,
-                WhiplashTunerConstants.DrivetrainConstants.Pigeon2Id,
-                WhiplashTunerConstants.FrontLeft.WheelRadius,
-                Math.abs(WhiplashTunerConstants.FrontLeft.LocationX)
-                    + Math.abs(WhiplashTunerConstants.FrontRight.LocationX),
-                Math.abs(WhiplashTunerConstants.FrontLeft.LocationY)
-                    + Math.abs(WhiplashTunerConstants.BackLeft.LocationY),
-                WhiplashTunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+                TunerConstantsWhiplash.DrivetrainConstants.CANBusName,
+                TunerConstantsWhiplash.DrivetrainConstants.Pigeon2Id,
+                TunerConstantsWhiplash.FrontLeft.WheelRadius,
+                Math.abs(TunerConstantsWhiplash.FrontLeft.LocationX)
+                    + Math.abs(TunerConstantsWhiplash.FrontRight.LocationX),
+                Math.abs(TunerConstantsWhiplash.FrontLeft.LocationY)
+                    + Math.abs(TunerConstantsWhiplash.BackLeft.LocationY),
+                TunerConstantsWhiplash.kSpeedAt12Volts.in(MetersPerSecond),
                 DCMotor.getKrakenX60Foc(1),
                 DCMotor.getKrakenX60Foc(1));
 
-        FRONT_LEFT = WhiplashTunerConstants.FrontLeft;
-        FRONT_RIGHT = WhiplashTunerConstants.FrontRight;
-        BACK_LEFT = WhiplashTunerConstants.BackLeft;
-        BACK_RIGHT = WhiplashTunerConstants.BackRight;
+        FRONT_LEFT = TunerConstantsWhiplash.FrontLeft;
+        FRONT_RIGHT = TunerConstantsWhiplash.FrontRight;
+        BACK_LEFT = TunerConstantsWhiplash.BackLeft;
+        BACK_RIGHT = TunerConstantsWhiplash.BackRight;
 
         GAINS =
             new Gains(
-                WhiplashTunerConstants.FrontLeft.DriveMotorGains.kS,
-                WhiplashTunerConstants.FrontLeft.DriveMotorGains.kV,
+                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kS,
+                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kV,
                 new LoggedTunableNumber(
-                    "Drive/Gains/Drive Kp", WhiplashTunerConstants.FrontLeft.DriveMotorGains.kP),
+                    "Drive/Gains/Drive Kp", TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kP),
                 new LoggedTunableNumber(
-                    "Drive/Gains/Drive Kd", WhiplashTunerConstants.FrontLeft.DriveMotorGains.kD),
+                    "Drive/Gains/Drive Kd", TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kD),
                 new LoggedTunableNumber(
-                    "Drive/Gains/Turn Kp", WhiplashTunerConstants.FrontLeft.SteerMotorGains.kP),
+                    "Drive/Gains/Turn Kp", TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kP),
                 new LoggedTunableNumber(
-                    "Drive/Gains/Turn Kd", WhiplashTunerConstants.FrontLeft.SteerMotorGains.kD));
+                    "Drive/Gains/Turn Kd", TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kD));
 
         AUTO_ALIGN_GAINS = new AutoAlignGains(4.0, 0.0, 5.0, 0.05);
 
@@ -86,14 +86,14 @@ public class DriveConstants {
     public Translation2d[] getModuleTranslations() {
       return new Translation2d[] {
         new Translation2d(
-            WhiplashTunerConstants.FrontLeft.LocationX, WhiplashTunerConstants.FrontLeft.LocationY),
+            TunerConstantsWhiplash.FrontLeft.LocationX, TunerConstantsWhiplash.FrontLeft.LocationY),
         new Translation2d(
-            WhiplashTunerConstants.FrontRight.LocationX,
-            WhiplashTunerConstants.FrontRight.LocationY),
+            TunerConstantsWhiplash.FrontRight.LocationX,
+            TunerConstantsWhiplash.FrontRight.LocationY),
         new Translation2d(
-            WhiplashTunerConstants.BackLeft.LocationX, WhiplashTunerConstants.BackLeft.LocationY),
+            TunerConstantsWhiplash.BackLeft.LocationX, TunerConstantsWhiplash.BackLeft.LocationY),
         new Translation2d(
-            WhiplashTunerConstants.BackRight.LocationX, WhiplashTunerConstants.BackRight.LocationY)
+            TunerConstantsWhiplash.BackRight.LocationX, TunerConstantsWhiplash.BackRight.LocationY)
       };
     }
 

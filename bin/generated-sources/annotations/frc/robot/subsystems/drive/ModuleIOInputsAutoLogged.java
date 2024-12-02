@@ -1,10 +1,11 @@
 package frc.robot.subsystems.drive;
 
+import java.lang.Cloneable;
+import java.lang.Override;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public class ModuleIOInputsAutoLogged extends ModuleIO.ModuleIOInputs
-    implements LoggableInputs, Cloneable {
+public class ModuleIOInputsAutoLogged extends ModuleIO.ModuleIOInputs implements LoggableInputs, Cloneable {
   @Override
   public void toLog(LogTable table) {
     table.put("DrivePosition", drivePosition);
@@ -36,20 +37,16 @@ public class ModuleIOInputsAutoLogged extends ModuleIO.ModuleIOInputs
   @Override
   public void fromLog(LogTable table) {
     drivePosition = table.get("DrivePosition", drivePosition);
-    driveVelocityRadiansPerSecond =
-        table.get("DriveVelocityRadiansPerSecond", driveVelocityRadiansPerSecond);
+    driveVelocityRadiansPerSecond = table.get("DriveVelocityRadiansPerSecond", driveVelocityRadiansPerSecond);
     driveAppliedVolts = table.get("DriveAppliedVolts", driveAppliedVolts);
     driveSupplyCurrentAmps = table.get("DriveSupplyCurrentAmps", driveSupplyCurrentAmps);
     driveTorqueCurrentAmps = table.get("DriveTorqueCurrentAmps", driveTorqueCurrentAmps);
     driveTemperatureCelcius = table.get("DriveTemperatureCelcius", driveTemperatureCelcius);
-    driveVelocitySetpointRadiansPerSecond =
-        table.get("DriveVelocitySetpointRadiansPerSecond", driveVelocitySetpointRadiansPerSecond);
-    driveVelocityErrorRadiansPerSecond =
-        table.get("DriveVelocityErrorRadiansPerSecond", driveVelocityErrorRadiansPerSecond);
+    driveVelocitySetpointRadiansPerSecond = table.get("DriveVelocitySetpointRadiansPerSecond", driveVelocitySetpointRadiansPerSecond);
+    driveVelocityErrorRadiansPerSecond = table.get("DriveVelocityErrorRadiansPerSecond", driveVelocityErrorRadiansPerSecond);
     turnAbsolutePosition = table.get("TurnAbsolutePosition", turnAbsolutePosition);
     turnPosition = table.get("TurnPosition", turnPosition);
-    turnVelocityRadiansPerSecond =
-        table.get("TurnVelocityRadiansPerSecond", turnVelocityRadiansPerSecond);
+    turnVelocityRadiansPerSecond = table.get("TurnVelocityRadiansPerSecond", turnVelocityRadiansPerSecond);
     turnAppliedVolts = table.get("TurnAppliedVolts", turnAppliedVolts);
     turnSupplyCurrentAmps = table.get("TurnSupplyCurrentAmps", turnSupplyCurrentAmps);
     turnTorqueCurrentAmps = table.get("TurnTorqueCurrentAmps", turnTorqueCurrentAmps);
