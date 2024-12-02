@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -30,6 +31,9 @@ public class Module {
   private final Alert turnDisconnectedAlert;
   private final Alert turnEncoderDisconnectedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+
+  private final LoggedTunableNumber driveKp;
+  private final LoggedTunableNumber driveKd;
 
   public Module(ModuleIO io, int index) {
     this.io = io;
@@ -45,6 +49,9 @@ public class Module {
         new Alert(
             "Disconnected turn encoder on module " + Integer.toString(index) + ".",
             AlertType.kError);
+
+    driveKp = new LoggedTunableNumber("Drive/Drive Kp", DriveConstants.GAINS.driveKp());
+    driveKd = new LoggedTunableNumber("Drive/Drive Kd", DriveConstants.GAINS.driveKd());
   }
 
   public void periodic() {
@@ -65,6 +72,9 @@ public class Module {
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+
+    LoggedTunableNumber.ifChanged(
+        hashCode(), () -> io.setDrivePID(driveKp.get(), 0.0, driveKd.get()), driveKp, driveKd);
   }
 
   /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */

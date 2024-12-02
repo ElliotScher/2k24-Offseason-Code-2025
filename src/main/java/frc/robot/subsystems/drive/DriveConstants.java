@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants;
-import frc.robot.util.LoggedTunableNumber;
 
 public class DriveConstants {
   public static final DriveConfig DRIVE_CONFIG;
@@ -49,14 +48,10 @@ public class DriveConstants {
             new Gains(
                 TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kS,
                 TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kV,
-                new LoggedTunableNumber(
-                    "Drive/Gains/Drive Kp", TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kP),
-                new LoggedTunableNumber(
-                    "Drive/Gains/Drive Kd", TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kD),
-                new LoggedTunableNumber(
-                    "Drive/Gains/Turn Kp", TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kP),
-                new LoggedTunableNumber(
-                    "Drive/Gains/Turn Kd", TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kD));
+                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kP,
+                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kD,
+                TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kP,
+                TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kD);
 
         AUTO_ALIGN_GAINS = new AutoAlignGains(4.0, 0.0, 5.0, 0.05);
 
@@ -105,10 +100,10 @@ public class DriveConstants {
   public record Gains(
       double driveKs,
       double driveKv,
-      LoggedTunableNumber driveKp,
-      LoggedTunableNumber driveKd,
-      LoggedTunableNumber turnKp,
-      LoggedTunableNumber turnKd) {}
+      double driveKp,
+      double driveKd,
+      double turnKp,
+      double turnKd) {}
 
   public record AutoAlignGains(
       double translation_Kp, double translation_Kd, double rotation_Kp, double rotation_Kd) {}

@@ -119,7 +119,7 @@ public final class DriveCommands {
                 RobotState.getControlData().speakerRadialVelocity()
                     + (aimController.calculate(
                         RobotState.getRobotPose().getRotation().getRadians(),
-                    RobotState.getControlData().feedRobotAngle().getRadians()));
+                        RobotState.getControlData().feedRobotAngle().getRadians()));
           } else {
             angular = omega * DriveConstants.DRIVE_CONFIG.maxAngularVelocity();
           }

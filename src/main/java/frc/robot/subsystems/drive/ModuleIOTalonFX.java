@@ -18,6 +18,7 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -51,6 +52,7 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final CANcoder cancoder;
 
   private final TalonFXConfiguration driveConfig;
+  private final InvertedValue driveInvert;
   private final TalonFXConfiguration turnConfig;
   private final CANcoderConfiguration cancoderConfig;
 
@@ -104,6 +106,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
+    driveInvert = driveConfig.MotorOutput.Inverted;
     tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
@@ -294,5 +297,12 @@ public class ModuleIOTalonFX implements ModuleIO {
         positionTorqueCurrentRequest
             .withPosition(rotation.getRotations())
             .withUpdateFreqHz(1000.0));
+  }
+
+  @Override
+  public void setDrivePID(double kp, double ki, double kd) {
+    driveConfig.Slot0 = new Slot0Configs().withKP(kp).withKI(ki).withKD(kd);
+    driveConfig.MotorOutput.Inverted = driveInvert;
+    driveTalon.getConfigurator().apply(driveConfig, 0.01);
   }
 }
