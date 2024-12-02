@@ -31,15 +31,15 @@ public class ModuleIOSim implements ModuleIO {
   private final DCMotorSim driveSim;
   private final DCMotorSim turnSim;
 
-  private boolean driveClosedLoop = false;
-  private boolean turnClosedLoop = false;
-  private PIDController driveController =
-      new PIDController(DriveConstants.GAINS.driveKp(), 0, DriveConstants.GAINS.driveKd());
-  private PIDController turnController =
-      new PIDController(DriveConstants.GAINS.turnKp(), 0, DriveConstants.GAINS.turnKd());
-  private double driveFFVolts = 0.0;
-  private double driveAppliedVolts = 0.0;
-  private double turnAppliedVolts = 0.0;
+  private boolean driveClosedLoop;
+  private boolean turnClosedLoop;
+
+  private PIDController driveController;
+  private PIDController turnController;
+  
+  private double driveFFVolts;
+  private double driveAppliedVolts;
+  private double turnAppliedVolts;
 
   public ModuleIOSim(SwerveModuleConstants constants) {
     // Create drive and turn sim models
@@ -57,6 +57,16 @@ public class ModuleIOSim implements ModuleIO {
                 constants.SteerInertia,
                 constants.SteerMotorGearRatio),
             DriveConstants.DRIVE_CONFIG.turnModel());
+
+    driveClosedLoop = false;
+    turnClosedLoop = false;
+
+    driveController = new PIDController(DriveConstants.GAINS.driveKp(), 0.0, DriveConstants.GAINS.driveKd());
+    turnController = new PIDController(DriveConstants.GAINS.turnKp(), 0.0, DriveConstants.GAINS.turnKd());
+
+    driveFFVolts = 0.0;
+    driveAppliedVolts = 0.0;
+    turnAppliedVolts = 0.0;
 
     // Enable wrapping for turn PID
     turnController.enableContinuousInput(-Math.PI, Math.PI);
@@ -133,10 +143,5 @@ public class ModuleIOSim implements ModuleIO {
   public void setTurnPosition(Rotation2d position) {
     turnClosedLoop = true;
     turnController.setSetpoint(position.getRadians());
-  }
-
-  @Override
-  public void setDrivePID(double kp, double ki, double kd) {
-    driveController.setPID(kp, ki, kd);
   }
 }

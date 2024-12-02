@@ -18,7 +18,6 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -47,8 +46,6 @@ import java.util.Queue;
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
 public class ModuleIOTalonFX implements ModuleIO {
-  private final SwerveModuleConstants constants;
-
   private final TalonFX driveTalon;
   private final TalonFX turnTalon;
   private final CANcoder cancoder;
@@ -90,8 +87,6 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final Debouncer turnEncoderConnectedDebounce;
 
   public ModuleIOTalonFX(SwerveModuleConstants constants) {
-    this.constants = constants;
-
     driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.DRIVE_CONFIG.canBus());
     turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.DRIVE_CONFIG.canBus());
     cancoder = new CANcoder(constants.CANcoderId, DriveConstants.DRIVE_CONFIG.canBus());
@@ -299,16 +294,5 @@ public class ModuleIOTalonFX implements ModuleIO {
         positionTorqueCurrentRequest
             .withPosition(rotation.getRotations())
             .withUpdateFreqHz(1000.0));
-  }
-
-  @Override
-  public void setDrivePID(double kp, double ki, double kd) {
-    driveConfig.Slot0 =
-        new Slot0Configs().withKP(kp).withKI(ki).withKD(kd).withKS(constants.DriveMotorGains.kS);
-    driveConfig.MotorOutput.Inverted =
-        constants.DriveMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    driveTalon.getConfigurator().apply(driveConfig, 0.01);
   }
 }

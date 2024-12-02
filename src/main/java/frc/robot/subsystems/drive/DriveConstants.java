@@ -44,15 +44,7 @@ public class DriveConstants {
         BACK_LEFT = TunerConstantsWhiplash.BackLeft;
         BACK_RIGHT = TunerConstantsWhiplash.BackRight;
 
-        GAINS =
-            new Gains(
-                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kS,
-                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kV,
-                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kP,
-                TunerConstantsWhiplash.FrontLeft.DriveMotorGains.kD,
-                TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kP,
-                TunerConstantsWhiplash.FrontLeft.SteerMotorGains.kD);
-
+        GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         AUTO_ALIGN_GAINS = new AutoAlignGains(4.0, 0.0, 5.0, 0.05);
 
         ODOMETRY_FREQUENCY = 250.0;
