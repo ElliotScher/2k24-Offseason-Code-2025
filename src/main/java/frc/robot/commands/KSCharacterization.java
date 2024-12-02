@@ -1,10 +1,3 @@
-// Copyright (c) 2024 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
-
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -52,7 +45,9 @@ public class KSCharacterization extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    System.out.println("Static Characterization output: " + currentInput + " amps");
+    System.out.println("********** FF Characterization Results **********\n\n\n\n\n\n\n\n\n");
+    System.out.println(
+        "Static Characterization output: " + currentInput + " amps\n\n\n\n\n\n\n\n\n\n");
     inputConsumer.accept(0);
   }
 }

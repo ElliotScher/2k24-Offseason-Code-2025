@@ -47,12 +47,13 @@ import java.util.Queue;
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
 public class ModuleIOTalonFX implements ModuleIO {
+  private final SwerveModuleConstants constants;
+
   private final TalonFX driveTalon;
   private final TalonFX turnTalon;
   private final CANcoder cancoder;
 
   private final TalonFXConfiguration driveConfig;
-  private final InvertedValue driveInvert;
   private final TalonFXConfiguration turnConfig;
   private final CANcoderConfiguration cancoderConfig;
 
@@ -89,6 +90,8 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final Debouncer turnEncoderConnectedDebounce;
 
   public ModuleIOTalonFX(SwerveModuleConstants constants) {
+    this.constants = constants;
+
     driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.DRIVE_CONFIG.canBus());
     turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.DRIVE_CONFIG.canBus());
     cancoder = new CANcoder(constants.CANcoderId, DriveConstants.DRIVE_CONFIG.canBus());
@@ -106,7 +109,6 @@ public class ModuleIOTalonFX implements ModuleIO {
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    driveInvert = driveConfig.MotorOutput.Inverted;
     tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
@@ -301,8 +303,12 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   @Override
   public void setDrivePID(double kp, double ki, double kd) {
-    driveConfig.Slot0 = new Slot0Configs().withKP(kp).withKI(ki).withKD(kd);
-    driveConfig.MotorOutput.Inverted = driveInvert;
+    driveConfig.Slot0 =
+        new Slot0Configs().withKP(kp).withKI(ki).withKD(kd).withKS(constants.DriveMotorGains.kS);
+    driveConfig.MotorOutput.Inverted =
+        constants.DriveMotorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     driveTalon.getConfigurator().apply(driveConfig, 0.01);
   }
 }

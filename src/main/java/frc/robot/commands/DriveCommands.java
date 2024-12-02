@@ -38,9 +38,6 @@ import lombok.Getter;
 
 public final class DriveCommands {
   @Getter private static PIDController aimController;
-  @Getter private static Rotation2d aimHeading;
-  private static double aimFeedforward;
-  private static boolean isAiming;
 
   static {
     aimController =
@@ -52,8 +49,6 @@ public final class DriveCommands {
 
     aimController.enableContinuousInput(-Math.PI, Math.PI);
     aimController.setTolerance(Units.degreesToRadians(1.0));
-
-    aimHeading = new Rotation2d();
   }
 
   /**
