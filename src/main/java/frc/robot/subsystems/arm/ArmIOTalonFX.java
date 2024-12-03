@@ -9,6 +9,8 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -35,16 +37,14 @@ public class ArmIOTalonFX implements ArmIO {
 
   private final StatusSignal<Angle> absolutePosition;
 
-  private final MotionMagicVoltage positionControl;
-  private final VoltageOut voltageControl;
   private final NeutralOut neutralControl;
+  private final VoltageOut voltageControl;
+  private final MotionMagicVoltage voltagePositionControl;
 
   private final TalonFXConfiguration motorConfig;
   private final CANcoderConfiguration cancoderConfig;
 
   private Rotation2d positionGoal;
-
-  private boolean hasResetPosition;
 
   public ArmIOTalonFX() {
     motor = new TalonFX(ArmConstants.ARM_CAN_ID);
@@ -52,9 +52,12 @@ public class ArmIOTalonFX implements ArmIO {
 
     motorConfig = new TalonFXConfiguration();
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    motorConfig.Feedback.SensorToMechanismRatio = ArmConstants.ARM_GEAR_RATIO;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.Feedback.FeedbackRemoteSensorID = cancoder.getDeviceID();
+    motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    motorConfig.Feedback.SensorToMechanismRatio = 1.0;
+    motorConfig.Feedback.RotorToSensorRatio = ArmConstants.ARM_GEAR_RATIO;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotionMagic.MotionMagicCruiseVelocity =
         Units.radiansToRotations(ArmConstants.ARM_MAX_VELOCITY.get());
@@ -69,7 +72,10 @@ public class ArmIOTalonFX implements ArmIO {
     motor.getConfigurator().apply(motorConfig);
 
     cancoderConfig = new CANcoderConfiguration();
-    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
+    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+    cancoderConfig.MagnetSensor.MagnetOffset =
+        ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET.getRotations();
     cancoder.getConfigurator().apply(cancoderConfig);
 
     positionRotations = motor.getPosition();
@@ -82,9 +88,9 @@ public class ArmIOTalonFX implements ArmIO {
 
     absolutePosition = cancoder.getAbsolutePosition();
 
-    positionControl = new MotionMagicVoltage(0.0);
-    voltageControl = new VoltageOut(0.0);
     neutralControl = new NeutralOut();
+    voltageControl = new VoltageOut(0.0);
+    voltagePositionControl = new MotionMagicVoltage(0.0);
 
     positionGoal = new Rotation2d();
 
@@ -102,7 +108,7 @@ public class ArmIOTalonFX implements ArmIO {
     motor.optimizeBusUtilization(50.0, 1.0);
     cancoder.optimizeBusUtilization(50.0, 1.0);
 
-    hasResetPosition = false;
+    motor.setPosition(((absolutePosition.getValueAsDouble() * ArmConstants.ARM_GEAR_RATIO)));
   }
 
   @Override
@@ -126,15 +132,11 @@ public class ArmIOTalonFX implements ArmIO {
     inputs.armCurrentAmps = currentAmps.getValueAsDouble();
     inputs.armTemperatureCelsius = temperatureCelcius.getValueAsDouble();
 
-    inputs.armAbsolutePosition =
-        Rotation2d.fromRotations(absolutePosition.getValueAsDouble())
-            .minus(ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET);
-
+    inputs.armAbsolutePosition = Rotation2d.fromRotations(absolutePosition.getValueAsDouble());
+    inputs.positionGoal = positionGoal;
     inputs.positionSetpoint =
         Rotation2d.fromRotations(positionSetpointRotations.getValueAsDouble());
     inputs.positionError = Rotation2d.fromRotations(positionErrorRotations.getValueAsDouble());
-
-    inputs.positionGoal = positionGoal;
   }
 
   @Override
@@ -144,35 +146,17 @@ public class ArmIOTalonFX implements ArmIO {
 
   @Override
   public void setArmVoltage(double volts) {
-    if (!hasResetPosition) {
-      hasResetPosition =
-          motor
-              .setPosition(
-                  (absolutePosition.getValueAsDouble()
-                          - ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET.getRotations())
-                      * -1.0)
-              .isOK();
-    }
     motor.setControl(voltageControl.withOutput(volts).withEnableFOC(false));
   }
 
   @Override
   public void setArmPosition(Rotation2d currentPosition, Rotation2d setpointPosition) {
-    if (!hasResetPosition) {
-      hasResetPosition =
-          motor
-              .setPosition(
-                  (absolutePosition.getValueAsDouble()
-                          - ArmConstants.ARM_ABSOLUTE_ENCODER_OFFSET.getRotations())
-                      * -1.0)
-              .isOK();
-    }
     positionGoal = setpointPosition;
     motor.setControl(
-        positionControl
-            .withPosition(setpointPosition.getRotations())
+        voltagePositionControl
+            .withPosition(positionGoal.getRotations())
             .withUpdateFreqHz(1000)
-            .withEnableFOC(false));
+            .withEnableFOC(true));
   }
 
   @Override
