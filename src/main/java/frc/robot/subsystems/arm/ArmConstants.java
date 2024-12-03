@@ -72,7 +72,7 @@ public class ArmConstants {
         ARM_ABSOLUTE_ENCODER_OFFSET =
             Rotation2d.fromRadians(-0.6273981422452273).plus(Rotation2d.fromDegrees(18.746));
         ARM_ENCODER_ID = 24;
-        GOAL_TOLERANCE.initDefault(0.5);
+        GOAL_TOLERANCE.initDefault(1.0);
         // Get
         ARM_LENGTH_METERS = 0.381;
         ARM_MIN_ANGLE = Units.degreesToRadians(18.75);
