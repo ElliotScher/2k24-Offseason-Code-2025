@@ -30,7 +30,16 @@ public class RobotState {
   @Getter
   private static ControlData controlData =
       new ControlData(
-          new Rotation2d(), 0.0, new Rotation2d(), 0.0, new Rotation2d(), 0.0, new Rotation2d());
+          new Rotation2d(),
+          0.0,
+          new Rotation2d(),
+          0.0,
+          new Rotation2d(),
+          0.0,
+          new Rotation2d(),
+          false,
+          false,
+          false);
 
   @Getter @Setter private static double speakerFlywheelCompensation = 0.0;
   @Getter @Setter private static double speakerAngleCompensation = 0.0;
@@ -88,7 +97,10 @@ public class RobotState {
       double robotYawVelocity,
       Translation2d robotFieldRelativeVelocity,
       SwerveModulePosition[] modulePositions,
-      Camera[] cameras) {
+      Camera[] cameras,
+      boolean hasNoteLocked,
+      boolean hasNoteStaged,
+      boolean isIntaking) {
 
     RobotState.robotHeading = robotHeading;
     RobotState.modulePositions = modulePositions;
@@ -133,6 +145,7 @@ public class RobotState {
       }
     }
 
+    // Speaker Shot Calculations
     Translation2d speakerPose =
         AllianceFlipUtil.apply(FieldConstants.Speaker.centerSpeakerOpening.toTranslation2d());
     double distanceToSpeaker =
@@ -186,7 +199,10 @@ public class RobotState {
             ampRadialVelocity,
             feedRobotAngle,
             feedRadialVelocity,
-            new Rotation2d(feedShotAngleMap.get(effectiveDistanceToAmp)));
+            new Rotation2d(feedShotAngleMap.get(effectiveDistanceToAmp)),
+            hasNoteLocked,
+            hasNoteStaged,
+            isIntaking);
 
     Logger.recordOutput(
         "RobotState/Pose Data/Estimated Pose", poseEstimator.getEstimatedPosition());
@@ -239,5 +255,8 @@ public class RobotState {
       double ampRadialVelocity,
       Rotation2d feedRobotAngle,
       double feedRadialVelocity,
-      Rotation2d feedArmAngle) {}
+      Rotation2d feedArmAngle,
+      boolean hasNoteLocked,
+      boolean hasNoteStaged,
+      boolean isIntaking) {}
 }

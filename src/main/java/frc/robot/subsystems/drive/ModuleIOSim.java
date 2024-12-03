@@ -36,7 +36,7 @@ public class ModuleIOSim implements ModuleIO {
 
   private PIDController driveController;
   private PIDController turnController;
-  
+
   private double driveFFVolts;
   private double driveAppliedVolts;
   private double turnAppliedVolts;
@@ -61,8 +61,10 @@ public class ModuleIOSim implements ModuleIO {
     driveClosedLoop = false;
     turnClosedLoop = false;
 
-    driveController = new PIDController(DriveConstants.GAINS.driveKp(), 0.0, DriveConstants.GAINS.driveKd());
-    turnController = new PIDController(DriveConstants.GAINS.turnKp(), 0.0, DriveConstants.GAINS.turnKd());
+    driveController =
+        new PIDController(DriveConstants.GAINS.driveKp(), 0.0, DriveConstants.GAINS.driveKd());
+    turnController =
+        new PIDController(DriveConstants.GAINS.turnKp(), 0.0, DriveConstants.GAINS.turnKd());
 
     driveFFVolts = 0.0;
     driveAppliedVolts = 0.0;
