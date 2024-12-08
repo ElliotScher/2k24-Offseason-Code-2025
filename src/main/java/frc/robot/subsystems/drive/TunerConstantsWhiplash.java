@@ -122,6 +122,7 @@ public class TunerConstantsWhiplash {
   private static final Angle kFrontLeftEncoderOffset =
       Rotations.of(-0.324951171875).plus(Degrees.of(180.0));
   private static final boolean kFrontLeftSteerMotorInverted = true;
+  private static final boolean kFrontLeftCancoderInverted = false;
 
   private static final Distance kFrontLeftXPos = Inches.of(10.5);
   private static final Distance kFrontLeftYPos = Inches.of(10.5);
@@ -132,6 +133,7 @@ public class TunerConstantsWhiplash {
   private static final int kFrontRightEncoderId = 21;
   private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.063720703125);
   private static final boolean kFrontRightSteerMotorInverted = true;
+  private static final boolean kFrontRightCancoderInverted = false;
 
   private static final Distance kFrontRightXPos = Inches.of(10.5);
   private static final Distance kFrontRightYPos = Inches.of(-10.5);
@@ -142,6 +144,7 @@ public class TunerConstantsWhiplash {
   private static final int kBackLeftEncoderId = 22;
   private static final Angle kBackLeftEncoderOffset = Rotations.of(-0.2109375);
   private static final boolean kBackLeftSteerMotorInverted = true;
+  private static final boolean kBackLeftCancoderInverted = false;
 
   private static final Distance kBackLeftXPos = Inches.of(-10.5);
   private static final Distance kBackLeftYPos = Inches.of(10.5);
@@ -152,6 +155,7 @@ public class TunerConstantsWhiplash {
   private static final int kBackRightEncoderId = 23;
   private static final Angle kBackRightEncoderOffset = Rotations.of(-0.234619140625);
   private static final boolean kBackRightSteerMotorInverted = true;
+  private static final boolean kBackRightCancoderInverted = false;
 
   private static final Distance kBackRightXPos = Inches.of(-10.5);
   private static final Distance kBackRightYPos = Inches.of(-10.5);
@@ -165,7 +169,8 @@ public class TunerConstantsWhiplash {
           kFrontLeftXPos,
           kFrontLeftYPos,
           kInvertLeftSide,
-          kFrontLeftSteerMotorInverted);
+          kFrontLeftSteerMotorInverted,
+          kFrontLeftCancoderInverted);
   public static final SwerveModuleConstants FrontRight =
       ConstantCreator.createModuleConstants(
           kFrontRightSteerMotorId,
@@ -175,7 +180,8 @@ public class TunerConstantsWhiplash {
           kFrontRightXPos,
           kFrontRightYPos,
           kInvertRightSide,
-          kFrontRightSteerMotorInverted);
+          kFrontRightSteerMotorInverted,
+          kFrontRightCancoderInverted);
   public static final SwerveModuleConstants BackLeft =
       ConstantCreator.createModuleConstants(
           kBackLeftSteerMotorId,
@@ -185,7 +191,8 @@ public class TunerConstantsWhiplash {
           kBackLeftXPos,
           kBackLeftYPos,
           kInvertLeftSide,
-          kBackLeftSteerMotorInverted);
+          kBackLeftSteerMotorInverted,
+          kBackLeftCancoderInverted);
   public static final SwerveModuleConstants BackRight =
       ConstantCreator.createModuleConstants(
           kBackRightSteerMotorId,
@@ -195,7 +202,8 @@ public class TunerConstantsWhiplash {
           kBackRightXPos,
           kBackRightYPos,
           kInvertRightSide,
-          kBackRightSteerMotorInverted);
+          kBackRightSteerMotorInverted,
+          kBackRightCancoderInverted);
 
   //   /**
   //    * Creates a CommandSwerveDrivetrain instance. This should only be called once in your robot
