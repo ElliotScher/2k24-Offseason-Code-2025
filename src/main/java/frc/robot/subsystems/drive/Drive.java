@@ -172,8 +172,8 @@ public class Drive extends SubsystemBase {
    */
   public void runVelocity(ChassisSpeeds speeds) {
     // Calculate module setpoints
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_PERIOD_SECONDS);
-    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+    speeds.discretize(Constants.LOOP_PERIOD_SECONDS);
+    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(
         setpointStates, DriveConstants.DRIVE_CONFIG.maxLinearVelocity());
 
@@ -200,8 +200,8 @@ public class Drive extends SubsystemBase {
       throw new IllegalArgumentException("Forces array must have 4 elements");
     }
     // Calculate module setpoints
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+    speeds.discretize(Constants.LOOP_PERIOD_SECONDS);
+    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
     SwerveModuleState[] setpointTorques = new SwerveModuleState[4];
     SwerveDriveKinematics.desaturateWheelSpeeds(
         setpointStates, DriveConstants.DRIVE_CONFIG.maxLinearVelocity());
