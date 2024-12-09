@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -98,10 +98,10 @@ public class Drive extends SubsystemBase {
 
     autoFactory =
         Choreo.createAutoFactory(
-            this,
             RobotState::getRobotPose,
             new AutoController(this),
             AllianceFlipUtil::shouldFlip,
+            this,
             new AutoBindings());
   }
 
@@ -314,7 +314,7 @@ public class Drive extends SubsystemBase {
     return gyroInputs.yawVelocityRadPerSec;
   }
 
-  public class AutoController implements BiConsumer<Pose2d, SwerveSample> {
+  public class AutoController implements Consumer<SwerveSample> {
     private final Drive drive; // drive subsystem
     private final PIDController xController =
         new PIDController(
@@ -338,7 +338,8 @@ public class Drive extends SubsystemBase {
     }
 
     @Override
-    public void accept(Pose2d pose, SwerveSample referenceState) {
+    public void accept(SwerveSample referenceState) {
+      Pose2d pose = RobotState.getRobotPose();
       double xFF = referenceState.vx;
       double yFF = referenceState.vy;
       double rotationFF = referenceState.omega;
