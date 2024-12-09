@@ -84,9 +84,9 @@ public final class DriveCommands {
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
 
-          double robotRelativeXVel =
+          double fieldRelativeXVel =
               linearVelocity.getX() * DriveConstants.DRIVE_CONFIG.maxLinearVelocity();
-          double robotRelativeYVel =
+          double fieldRelativeYVel =
               linearVelocity.getY() * DriveConstants.DRIVE_CONFIG.maxLinearVelocity();
 
           double angular = 0.0;
@@ -114,13 +114,11 @@ public final class DriveCommands {
           }
 
           ChassisSpeeds chassisSpeeds =
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  robotRelativeXVel,
-                  robotRelativeYVel,
-                  angular,
-                  isFlipped
-                      ? RobotState.getRobotPose().getRotation().plus(new Rotation2d(Math.PI))
-                      : RobotState.getRobotPose().getRotation());
+              new ChassisSpeeds(fieldRelativeXVel, fieldRelativeYVel, angular);
+          chassisSpeeds.toRobotRelativeSpeeds(
+              isFlipped
+                  ? RobotState.getRobotPose().getRotation().plus(new Rotation2d(Math.PI))
+                  : RobotState.getRobotPose().getRotation());
 
           // Convert to field relative speeds & send command
           drive.runVelocity(chassisSpeeds);
@@ -136,16 +134,17 @@ public final class DriveCommands {
                       && DriverStation.getAlliance().get() == Alliance.Red;
 
               ChassisSpeeds chassisSpeeds =
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                  new ChassisSpeeds(
                       0,
                       0,
                       RobotState.getControlData().speakerRadialVelocity()
                           + (aimController.calculate(
                               RobotState.getRobotPose().getRotation().getRadians(),
-                              RobotState.getControlData().speakerRobotAngle().getRadians())),
-                      isFlipped
-                          ? RobotState.getRobotPose().getRotation().plus(new Rotation2d(Math.PI))
-                          : RobotState.getRobotPose().getRotation());
+                              RobotState.getControlData().speakerRobotAngle().getRadians())));
+              chassisSpeeds.toRobotRelativeSpeeds(
+                  isFlipped
+                      ? RobotState.getRobotPose().getRotation().plus(new Rotation2d(Math.PI))
+                      : RobotState.getRobotPose().getRotation());
 
               // Convert to field relative speeds & send command
               drive.runVelocity(chassisSpeeds);
